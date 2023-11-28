@@ -5,4 +5,4 @@ all:
 clean:
 	make -C $(KDIR)  M=$(shell pwd) clean
 install:
-	sudo insmod gpio_controller_driver.ko
+	insmod gpio_controller_driver.ko
