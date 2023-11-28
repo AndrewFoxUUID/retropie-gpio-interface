@@ -9,6 +9,10 @@
 #include <linux/err.h>
 #include <linux/uaccess.h>
 
+static ssize_t gpio_controller_read(struct file *filp, char __user *buf, size_t len, loff_t *off);
+static int __init gpio_controller_driver_init(void);
+static void __exit gpio_controller_driver_exit(void);
+
 dev_t dev = 0;
 static struct cdev gpio_controller_cdev;
 static struct file_operations fops = {
