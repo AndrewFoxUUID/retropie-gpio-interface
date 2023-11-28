@@ -9,9 +9,9 @@
 #include <linux/err.h>
 #include <linux/uaccess.h>
 
-static int gpio_controller_open(struct inode *inode, struct file *file)
+static int gpio_controller_open(struct inode *inode, struct file *file);
 static ssize_t gpio_controller_read(struct file *filp, char __user *buf, size_t len, loff_t *off);
-static int gpio_controller_release(struct inode *inode, struct file *file)
+static int gpio_controller_release(struct inode *inode, struct file *file);
 static int __init gpio_controller_driver_init(void);
 static void __exit gpio_controller_driver_exit(void);
 
