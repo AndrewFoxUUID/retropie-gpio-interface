@@ -7,20 +7,33 @@
 #include <linux/device.h>
 #include <linux/gpio.h>
 #include <linux/err.h>
+#include <linux/uaccess.h>
 
 dev_t dev = 0;
 static struct cdev gpio_controller_cdev;
 static struct file_operations fops = {
-    .owner = THIS_MODULE
+    .owner = THIS_MODULE,
+    .read = gpio_controller_read
 };
 static struct class *dev_class;
+
+static ssize_t gpio_controller_read(struct file *filp, char __user *buf, size_t len, loff_t *off) {
+    uint8_t gpio_state = 0;
+    gpio_state = gpio_get_value(17);
+
+    len = 1;
+    if (copy_to_user(buf, &gpio_state, len) == 0) {
+        return 0;
+    }
+    return -1;
+}
 
 static int __init gpio_controller_driver_init(void) {
     if (alloc_chrdev_region(&dev, 0, 1, "gpio_controller") == 0) {
         cdev_init(&gpio_controller_cdev, &fops);
         if (cdev_add(&gpio_controller_cdev, dev, 1) == 0) {
             if (!IS_ERR(dev_class = class_create(THIS_MODULE, "gpio_controller_class"))) {
-                if (!IS_ERROR(device_create(dev_class, NULL, dev, NULL, "gpio_controller_device"))) {
+                if (!IS_ERR(device_create(dev_class, NULL, dev, NULL, "gpio_controller_device"))) {
                     if (gpio_is_valid(17) == true) {
                         if (gpio_request(17, "GPIO_17") == 0) {
                             gpio_direction_input(17);
