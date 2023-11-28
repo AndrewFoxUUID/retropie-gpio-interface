@@ -30,15 +30,9 @@ static int gpio_controller_open(struct inode *inode, struct file *file) {
 }
 
 static ssize_t gpio_controller_read(struct file *filp, char __user *buf, size_t len, loff_t *off) {
-    uint8_t gpio_state = 0;
+    char gpio_state = 0;
     gpio_state = '0' + gpio_get_value(17);
-
-    len = 1;
-    if (copy_to_user(buf, &gpio_state, len) == 0) {
-        pr_info("gpio_controller_read %c\n", gpio_state);
-        return 0;
-    }
-    return -1;
+    return simple_read_from_buffer(buf, len, off, &gpio_state, sizeof(char))
 }
 
 static int gpio_controller_release(struct inode *inode, struct file *file) {
