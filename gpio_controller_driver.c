@@ -35,7 +35,7 @@ static ssize_t gpio_controller_read(struct file *filp, char __user *buf, size_t 
 
     len = 1;
     if (copy_to_user(buf, &gpio_state, len) == 0) {
-        pr_info("gpio_controller_read\n");
+        pr_info("gpio_controller_read %c\n", gpio_state);
         return 0;
     }
     return -1;
