@@ -9,7 +9,9 @@
 #include <linux/err.h>
 #include <linux/uaccess.h>
 
+static int gpio_controller_open(struct inode *inode, struct file *file)
 static ssize_t gpio_controller_read(struct file *filp, char __user *buf, size_t len, loff_t *off);
+static int gpio_controller_release(struct inode *inode, struct file *file)
 static int __init gpio_controller_driver_init(void);
 static void __exit gpio_controller_driver_exit(void);
 
@@ -17,9 +19,15 @@ dev_t dev = 0;
 static struct cdev gpio_controller_cdev;
 static struct file_operations fops = {
     .owner = THIS_MODULE,
-    .read = gpio_controller_read
+    .open = gpio_controller_open,
+    .read = gpio_controller_read,
+    .release = gpio_controller_release
 };
 static struct class *dev_class;
+
+static int gpio_controller_open(struct inode *inode, struct file *file) {
+    return 0;
+}
 
 static ssize_t gpio_controller_read(struct file *filp, char __user *buf, size_t len, loff_t *off) {
     uint8_t gpio_state = 0;
@@ -30,6 +38,10 @@ static ssize_t gpio_controller_read(struct file *filp, char __user *buf, size_t 
         return 0;
     }
     return -1;
+}
+
+static int gpio_controller_release(struct inode *inode, struct file *file) {
+    return 0;
 }
 
 static int __init gpio_controller_driver_init(void) {
