@@ -362,6 +362,7 @@ static int __init gpio_controller_driver_init(void) {
                 if (gpio_request(A_PIN, pin_code) == 0) {
                     gpio_direction_input(A_PIN);
                     a_irq_number = gpio_to_irq(A_PIN);
+                    pr_info("got irq number");
                     /*if (request_irq(a_irq_number, a_press_interrupt, IRQF_TRIGGER_HIGH, "gpio_controller_device", NULL)) {
                         return -1;//goto unset_a_press;
                     }
@@ -369,7 +370,7 @@ static int __init gpio_controller_driver_init(void) {
                         return -1;//goto unset_a_release;
                     }*/
                     if (request_irq(a_irq_number, a_interrupt, IRQF_TRIGGER_HIGH | IRQF_TRIGGER_LOW, "gpio_controller_device", NULL) < 0) {
-                        pr_err("request irq failed");
+                        pr_info("request irq failed");
                         return -1;//goto unset_a;
                     }
                 }
