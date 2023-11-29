@@ -8,10 +8,17 @@
 #include <linux/gpio.h>
 #include <linux/err.h>
 #include <linux/uaccess.h>
+#include <linux/jiffies.h>
+#include <linux/interrupt.h>
+
+extern unsigned long volatile jiffies;
+unsigned long old_jiffie = 0;
+unsigned int GPIO_irqNumber;
 
 static int gpio_controller_open(struct inode *inode, struct file *file);
 static ssize_t gpio_controller_read(struct file *filp, char __user *buf, size_t len, loff_t *off);
 static int gpio_controller_release(struct inode *inode, struct file *file);
+static irqreturn_t gpio_irq_handler(int irq, void *dev_id);
 static int __init gpio_controller_driver_init(void);
 static void __exit gpio_controller_driver_exit(void);
 
@@ -31,12 +38,25 @@ static int gpio_controller_open(struct inode *inode, struct file *file) {
 
 static ssize_t gpio_controller_read(struct file *filp, char __user *buf, size_t len, loff_t *off) {
     char gpio_state[2] = {'\0', '\n'};
-    gpio_state[0] = '0' + gpio_get_value(17);
+    gpio_state[0] = '0' + gpio_get_value(11);
     return simple_read_from_buffer(buf, len, off, &gpio_state, sizeof(char[2]));
 }
 
 static int gpio_controller_release(struct inode *inode, struct file *file) {
     return 0;
+}
+
+static irqreturn_t gpio_irq_handler(int irq, void *dev_id) {
+    static unsigned long flags = 0;
+    unsigned long diff = jiffies - old_jiffie;
+    if (diff < 20) {
+        return IRQ_HANDLED;
+    }
+    old_jiffie = jiffies;
+    local_irq_save(flags);
+    pr_info("IRQ EVENT");
+    local_irq_restore(flags);
+    return IRQ_HANDLED;
 }
 
 static int __init gpio_controller_driver_init(void) {
@@ -45,13 +65,15 @@ static int __init gpio_controller_driver_init(void) {
         if (cdev_add(&gpio_controller_cdev, dev, 1) == 0) {
             if (!IS_ERR(dev_class = class_create(THIS_MODULE, "gpio_controller_class"))) {
                 if (!IS_ERR(device_create(dev_class, NULL, dev, NULL, "gpio_controller_device"))) {
-                    if (gpio_is_valid(17) == true) {
-                        if (gpio_request(17, "GPIO_17") == 0) {
-                            gpio_direction_input(17);
-                            gpio_export(17, false);
-                            return 0;
+                    if (gpio_is_valid(11) == true) {
+                        if (gpio_request(11, "GPIO_11") == 0) {
+                            gpio_direction_input(11);
+                            GPIO_irqNumber = gpio_to_irq(11);
+                            if (request_irq(GPIO_irqNumber, (void*) gpio_irq_handler, IRQF_TRIGGER_RISING, "gpio_controller_device", NULL) == 0) {
+                                return 0;
+                            }
                         }
-                        gpio_free(17);
+                        gpio_free(11);
                     }
                 }
                 device_destroy(dev_class, dev);
@@ -65,8 +87,8 @@ static int __init gpio_controller_driver_init(void) {
 }
 
 static void __exit gpio_controller_driver_exit(void) {
-    gpio_unexport(17);
-    gpio_free(17);
+    gpio_unexport(11);
+    gpio_free(11);
     device_destroy(dev_class, dev);
     class_destroy(dev_class);
     cdev_del(&gpio_controller_cdev);
