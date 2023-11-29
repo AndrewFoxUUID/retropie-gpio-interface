@@ -50,7 +50,7 @@ static irqreturn_t gpio_irq_handler(int irq, void *dev_id) {
     static unsigned long flags = 0;
     unsigned long diff = jiffies - old_jiffie;
     if (diff < 20) {
-        pr_info("SHORT IRQ EVENT")
+        pr_info("SHORT IRQ EVENT");
         return IRQ_HANDLED;
     }
     old_jiffie = jiffies;
