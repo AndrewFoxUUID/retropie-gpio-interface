@@ -58,6 +58,8 @@ unsigned long old_a_jiffie = 0;
 unsigned long old_x_jiffie = 0;
 unsigned long old_y_jiffie = 0;*/
 
+bool a_val = false;
+
 /*static irqreturn_t left_shoulder_press_interrupt(int irq, void *dummy) {
     static unsigned long flags;
     local_irq_save(flags);
@@ -159,9 +161,10 @@ static irqreturn_t a_interrupt(int irq, void *dummy) {
     local_irq_save(flags);
     if (jiffies - old_a_jiffie > DEBOUNCE_TIME) {
         pr_info("UNBOUNCED INTERRUPT");
-        input_report_key(gpio_controller_dev, A_KEY, gpio_get_value(A_PIN));
+        input_report_key(gpio_controller_dev, A_KEY, a_val);//gpio_get_value(A_PIN));
         input_sync(gpio_controller_dev);
         old_a_jiffie = jiffies;
+        a_val = !a_val;
     }
     local_irq_restore(flags);
     return IRQ_HANDLED;
