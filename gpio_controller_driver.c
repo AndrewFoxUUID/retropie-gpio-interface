@@ -158,6 +158,7 @@ static irqreturn_t a_press_interrupt(int irq, void *dummy) {
     static unsigned long flags;
     local_irq_save(flags);
     if (jiffies - old_a_jiffie > DEBOUNCE_TIME) {
+        pr_info("PRESS");
         input_report_key(gpio_controller_dev, A_KEY, 1);
         input_sync(gpio_controller_dev);
         old_a_jiffie = jiffies;
@@ -170,6 +171,7 @@ static irqreturn_t a_release_interrupt(int irq, void *dummy) {
     static unsigned long flags;
     local_irq_save(flags);
     if (jiffies - old_a_jiffie > DEBOUNCE_TIME) {
+        pr_info("RELEASE");
         input_report_key(gpio_controller_dev, A_KEY, 0);
         input_sync(gpio_controller_dev);
         old_a_jiffie = jiffies;
@@ -345,10 +347,10 @@ static int __init gpio_controller_driver_init(void) {
                     gpio_direction_input(A_PIN);
                     a_irq_number = gpio_to_irq(A_PIN);
                     pr_info("got irq number");
-                    if (request_irq(a_irq_number, a_press_interrupt, IRQF_TRIGGER_RISING, "gpio_controller_device", NULL)) {
+                    if (request_irq(a_irq_number, a_press_interrupt, IRQF_TRIGGER_RISING, "gpio_controller_device", NULL) < 0) {
                         return -1;//goto unset_a_press;
                     }
-                    if (request_irq(a_irq_number, a_release_interrupt, IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL)) {
+                    if (request_irq(a_irq_number, a_release_interrupt, IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {
                         return -1;//goto unset_a_release;
                     }
                 }
