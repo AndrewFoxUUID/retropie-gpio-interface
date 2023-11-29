@@ -5,8 +5,8 @@
 #include <linux/gpio.h>
 #include <linux/jiffies.h>
 
-#define LEFT_SHOULDER_PIN   18
-#define RIGHT_SHOULDER_PIN  15
+#define LEFT_SHOULDER_PIN   23
+#define RIGHT_SHOULDER_PIN  24
 #define START_PIN           27
 #define SELECT_PIN          22
 #define A_PIN               2
@@ -274,6 +274,8 @@ static int __init gpio_controller_driver_init(void) {
                         goto unset_left_shoulder_release;
                     }
                 }
+            } else {
+                goto unset_all;
             }
 
             if (gpio_is_valid(RIGHT_SHOULDER_PIN) == true) {
@@ -287,6 +289,8 @@ static int __init gpio_controller_driver_init(void) {
                         goto unset_right_shoulder_release;
                     }
                 }
+            } else {
+                goto unset_left_shoulder_release;
             }
 
             if (gpio_is_valid(START_PIN) == true) {
@@ -300,6 +304,8 @@ static int __init gpio_controller_driver_init(void) {
                         goto unset_start_release;
                     }
                 }
+            } else {
+                goto unset_right_shoulder_release;
             }
 
             if (gpio_is_valid(SELECT_PIN) == true) {
@@ -313,6 +319,8 @@ static int __init gpio_controller_driver_init(void) {
                         goto unset_select_release;
                     }
                 }
+            } else {
+                goto unset_start_release;
             }
 
             if (gpio_is_valid(A_PIN) == true) {
@@ -326,6 +334,8 @@ static int __init gpio_controller_driver_init(void) {
                         goto unset_a_release;
                     }
                 }
+            } else {
+                goto unset_select_release;
             }
 
             if (gpio_is_valid(B_PIN) == true) {
@@ -339,6 +349,8 @@ static int __init gpio_controller_driver_init(void) {
                         goto unset_b_release;
                     }
                 }
+            } else {
+                goto unset_a_release;
             }
 
             if (gpio_is_valid(X_PIN) == true) {
@@ -352,6 +364,8 @@ static int __init gpio_controller_driver_init(void) {
                         goto unset_x_release;
                     }
                 }
+            } else {
+                goto unset_b_release;
             }
 
             if (gpio_is_valid(Y_PIN) == true) {
@@ -365,43 +379,53 @@ static int __init gpio_controller_driver_init(void) {
                         goto unset_y_release;
                     }
                 }
+            } else {
+                goto unset_x_release;
+            }
+
+            # TEMP FIX
+            if (gpio_is_valid(14) == true) {
+                if (gpio_request(14, "GPIO_14") == 0) {
+                    gpio_direction_output(14, 1);
+                }
             }
 
             return 0;
 
-            unset_left_shoulder_press:
-                free_irq(left_shoulder_irq_number, left_shoulder_press_interrupt);
-            unset_left_shoulder_release:
-                free_irq(left_shoulder_irq_number, left_shoulder_release_interrupt);
-            unset_right_shoulder_press:
-                free_irq(right_shoulder_irq_number, right_shoulder_press_interrupt);
-            unset_right_shoulder_release:
-                free_irq(right_shoulder_irq_number, right_shoulder_release_interrupt);
-            unset_start_press:
-                free_irq(start_irq_number, start_press_interrupt);
-            unset_start_release:
-                free_irq(start_irq_number, start_release_interrupt);
-            unset_select_press:
-                free_irq(select_irq_number, select_press_interrupt);
-            unset_select_release:
-                free_irq(select_irq_number, select_release_interrupt);
-            unset_a_press:
-                free_irq(a_irq_number, a_press_interrupt);
-            unset_a_release:
-                free_irq(a_irq_number, a_release_interrupt);
-            unset_b_press:
-                free_irq(b_irq_number, b_press_interrupt);
-            unset_b_release:
-                free_irq(b_irq_number, b_release_interrupt);
-            unset_x_press:
-                free_irq(x_irq_number, x_press_interrupt);
-            unset_x_release:
-                free_irq(x_irq_number, x_release_interrupt);
-            unset_y_press:
-                free_irq(y_irq_number, y_press_interrupt);
             unset_y_release:
                 free_irq(y_irq_number, y_release_interrupt);
-            input_unregister_device(gpio_controller_dev);
+            unset_y_press:
+                free_irq(y_irq_number, y_press_interrupt);
+            unset_x_release:
+                free_irq(x_irq_number, x_release_interrupt);
+            unset_x_press:
+                free_irq(x_irq_number, x_press_interrupt);
+            unset_b_release:
+                free_irq(b_irq_number, b_release_interrupt);
+            unset_b_press:
+                free_irq(b_irq_number, b_press_interrupt);
+            unset_a_release:
+                free_irq(a_irq_number, a_release_interrupt);
+            unset_a_press:
+                free_irq(a_irq_number, a_press_interrupt);
+            unset_select_release:
+                free_irq(select_irq_number, select_release_interrupt);
+            unset_select_press:
+                free_irq(select_irq_number, select_press_interrupt);
+            unset_start_release:
+                free_irq(start_irq_number, start_release_interrupt);
+            unset_start_press:
+                free_irq(start_irq_number, start_press_interrupt);
+            unset_right_shoulder_release:
+                free_irq(right_shoulder_irq_number, right_shoulder_release_interrupt);
+            unset_right_shoulder_press:
+                free_irq(right_shoulder_irq_number, right_shoulder_press_interrupt);
+            unset_left_shoulder_release:
+                free_irq(left_shoulder_irq_number, left_shoulder_release_interrupt);
+            unset_left_shoulder_press:
+                free_irq(left_shoulder_irq_number, left_shoulder_press_interrupt);
+            unset_all:
+                input_unregister_device(gpio_controller_dev);
         } else {
             input_free_device(gpio_controller_dev);
         }
