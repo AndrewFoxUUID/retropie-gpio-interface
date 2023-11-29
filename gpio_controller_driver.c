@@ -187,7 +187,7 @@ static irqreturn_t a_interrupt(int irq, void *dummy) {
     local_irq_save(flags);
     pr_info("INTERRUPT");
 
-    if (diffies - old_a_jiffie > DEBOUNCE_TIME) {
+    if (jiffies - old_a_jiffie > DEBOUNCE_TIME) {
         input_report_key(gpio_controller_dev, A_KEY, gpio_get_value(A_PIN));
         input_sync(gpio_controller_dev);
         old_a_jiffie = jiffies;
