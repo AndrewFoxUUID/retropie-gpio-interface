@@ -5,7 +5,7 @@
 #include <linux/gpio.h>
 #include <linux/jiffies.h>
 
-#define LEFT_SHOULDER_PIN   14
+#define LEFT_SHOULDER_PIN   18
 #define RIGHT_SHOULDER_PIN  15
 #define START_PIN           27
 #define SELECT_PIN          22
