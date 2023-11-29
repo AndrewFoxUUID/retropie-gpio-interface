@@ -3,6 +3,9 @@
 #include <linux/init.h>
 #include <linux/interrupt.h>
 #include <linux/gpio.h>
+#include <linux/jiffies.h>
+
+extern unsigned long volatile jiffies;
 
 static irqreturn_t gpio_controller_interrupt(int irq, void *dummy);
 static int __init gpio_controller_driver_init(void);
@@ -10,12 +13,16 @@ static void __exit gpio_controller_driver_exit(void);
 
 static struct input_dev *gpio_controller_dev;
 unsigned int pin11_irq_number;
+unsigned long old_jiffie = 0;
 
 static irqreturn_t gpio_controller_interrupt(int irq, void *dummy) {
     static unsigned long flags;
     local_irq_save(flags);
-    input_report_key(gpio_controller_dev, KEY_A, gpio_get_value(11));
-    input_sync(gpio_controller_dev);
+    if (jiffies - old_jiffie > 20) {
+        input_report_key(gpio_controller_dev, KEY_A, gpio_get_value(11));
+        input_sync(gpio_controller_dev);
+    }
+    old_jiffie = jiffies;
     local_irq_restore(flags);
     return IRQ_HANDLED;
 }
