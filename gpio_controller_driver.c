@@ -263,7 +263,7 @@ static int __init gpio_controller_driver_init(void) {
         gpio_controller_dev->keybit[BIT_WORD(Y_KEY)] = BIT_MASK(Y_KEY);
 
         if (input_register_device(gpio_controller_dev) == 0) {
-            char[7] pin_code = "GPIO_XX";
+            char pin_code[7] = "GPIO_XX";
 
             if (gpio_is_valid(LEFT_SHOULDER_PIN) == true) {
                 pin_code[5] = '0' + (LEFT_SHOULDER_PIN / 10);
