@@ -11,17 +11,17 @@ MODULE_AUTHOR("Andrew Fox");
 MODULE_DESCRIPTION("A driver for a GPIO based custom RetroPie controller");
 MODULE_VERSION("0.2");
 
-#define LEFT_SHOULDER_PIN   23
-#define RIGHT_SHOULDER_PIN  24
-#define START_PIN           27
-#define SELECT_PIN          22
-#define A_PIN               2
-#define B_PIN               3
-#define X_PIN               4
-#define Y_PIN               17
-#define VRX_PIN             10
-#define VRY_PIN             9
-#define SW_PIN              11
+#define LEFT_SHOULDER_PIN   4
+#define RIGHT_SHOULDER_PIN  17
+#define START_PIN           22
+#define SELECT_PIN          27
+#define A_PIN               12
+#define B_PIN               25
+#define X_PIN               24
+#define Y_PIN               23
+#define VRX_PIN             6
+#define VRY_PIN             13
+#define SW_PIN              5
 
 #define LEFT_SHOULDER_KEY   KEY_GRAVE
 #define RIGHT_SHOULDER_KEY  KEY_1
