@@ -47,15 +47,15 @@ static int gpio_controller_release(struct inode *inode, struct file *file) {
 }
 
 static irqreturn_t gpio_irq_handler(int irq, void *dev_id) {
-    pr_info("IRQ EVENT");
     static unsigned long flags = 0;
     unsigned long diff = jiffies - old_jiffie;
     if (diff < 20) {
+        pr_info("SHORT IRQ EVENT")
         return IRQ_HANDLED;
     }
     old_jiffie = jiffies;
     local_irq_save(flags);
-    pr_info("IRQ EVENT CONTINUED");
+    pr_info("LONG IRQ EVENT");
     local_irq_restore(flags);
     return IRQ_HANDLED;
 }
