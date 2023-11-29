@@ -370,6 +370,7 @@ static int __init gpio_controller_driver_init(void) {
                     }*/
                     enable_irq(A_PIN);
                     if (request_irq(a_irq_number, a_interrupt, IRQF_TRIGGER_HIGH | IRQF_TRIGGER_LOW, "gpio_controller_device", NULL) < 0) {
+                        pr_err("request irq failed");
                         return -1;//goto unset_a;
                     }
                 }
