@@ -13,8 +13,6 @@
 #include <linux/input.h>
 
 extern unsigned long volatile jiffies;
-unsigned long old_jiffie = 0;
-unsigned int GPIO_irqNumber;
 
 static int gpio_controller_open(struct inode *inode, struct file *file);
 static ssize_t gpio_controller_read(struct file *filp, char __user *buf, size_t len, loff_t *off);
@@ -23,6 +21,8 @@ static irqreturn_t gpio_irq_handler(int irq, void *dev_id);
 static int __init gpio_controller_driver_init(void);
 static void __exit gpio_controller_driver_exit(void);
 
+unsigned long old_jiffie = 0;
+unsigned int GPIO_irqNumber;
 dev_t dev = 0;
 static struct cdev gpio_controller_cdev;
 static struct file_operations fops = {
@@ -32,6 +32,7 @@ static struct file_operations fops = {
     .release = gpio_controller_release
 };
 static struct class *dev_class;
+static struct input_dev *button_dev;
 
 static int gpio_controller_open(struct inode *inode, struct file *file) {
     return 0;
@@ -57,7 +58,7 @@ static irqreturn_t gpio_irq_handler(int irq, void *dev_id) {
     }
     old_jiffie = jiffies;
     pr_info("RISING EDGE DETECTED");
-    input_report_key(&dev, KEY_A, gpio_get_value(11));
+    input_report_key(&button_dev, KEY_A, gpio_get_value(11));
     local_irq_restore(flags);
     return IRQ_HANDLED;
 }
@@ -71,9 +72,18 @@ static int __init gpio_controller_driver_init(void) {
                     if (gpio_is_valid(11) == true) {
                         if (gpio_request(11, "GPIO_11") == 0) {
                             gpio_direction_input(11);
-                            GPIO_irqNumber = gpio_to_irq(11);
-                            if (request_irq(GPIO_irqNumber, (void*) gpio_irq_handler, IRQF_TRIGGER_RISING, "gpio_controller_device", NULL) == 0) {
-                                return 0;
+                            button_dev = input_allocate_device();
+                            if (button_dev) {
+                                button_dev->evbit[0] = BIT_MASK(EV_KEY);
+                                button_dev->keybit[BIT_WORD(BTN_A)] = BIT_MASK(BTN_A);
+                                if (input_register_device(button_dev) == 0) {
+                                    GPIO_irqNumber = gpio_to_irq(11);
+                                    if (request_irq(GPIO_irqNumber, (void*) gpio_irq_handler, IRQF_TRIGGER_RISING, "gpio_controller_device", NULL) == 0) {
+                                        return 0;
+                                    }
+                                    free_irq(GPIO_irqNumber, (void*) gpio_irq_handler);
+                                }
+                                input_free_device(button_dev);
                             }
                         }
                         gpio_free(11);
@@ -90,7 +100,8 @@ static int __init gpio_controller_driver_init(void) {
 }
 
 static void __exit gpio_controller_driver_exit(void) {
-    gpio_unexport(11);
+    free_irq(GPIO_irqNumber, (void*) gpio_irq_handler);
+    input_free_device(button_dev);
     gpio_free(11);
     device_destroy(dev_class, dev);
     class_destroy(dev_class);
