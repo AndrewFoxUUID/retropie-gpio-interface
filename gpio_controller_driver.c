@@ -268,14 +268,14 @@ static int __init gpio_controller_driver_init(void) {
                     gpio_direction_input(LEFT_SHOULDER_PIN);
                     left_shoulder_irq_number = gpio_to_irq(LEFT_SHOULDER_PIN);
                     if (request_irq(left_shoulder_irq_number, left_shoulder_press_interrupt, IRQF_TRIGGER_HIGH, "gpio_controller_device", NULL)) {
-                        goto unset_left_shoulder_press;
+                        return -1;//goto unset_left_shoulder_press;
                     }
                     if (request_irq(left_shoulder_irq_number, left_shoulder_release_interrupt, IRQF_TRIGGER_LOW, "gpio_controller_device", NULL)) {
-                        goto unset_left_shoulder_release;
+                        return -1;//goto unset_left_shoulder_release;
                     }
                 }
             } else {
-                goto unset_all;
+                return -1;//goto unset_all;
             }
 
             if (gpio_is_valid(RIGHT_SHOULDER_PIN) == true) {
@@ -285,14 +285,14 @@ static int __init gpio_controller_driver_init(void) {
                     gpio_direction_input(RIGHT_SHOULDER_PIN);
                     right_shoulder_irq_number = gpio_to_irq(RIGHT_SHOULDER_PIN);
                     if (request_irq(right_shoulder_irq_number, right_shoulder_press_interrupt, IRQF_TRIGGER_HIGH, "gpio_controller_device", NULL)) {
-                        goto unset_right_shoulder_press;
+                        return -1;//goto unset_right_shoulder_press;
                     }
                     if (request_irq(right_shoulder_irq_number, right_shoulder_release_interrupt, IRQF_TRIGGER_LOW, "gpio_controller_device", NULL)) {
-                        goto unset_right_shoulder_release;
+                        return -1;//goto unset_right_shoulder_release;
                     }
                 }
             } else {
-                goto unset_left_shoulder_release;
+                return -1;//goto unset_left_shoulder_release;
             }
 
             if (gpio_is_valid(START_PIN) == true) {
@@ -302,14 +302,14 @@ static int __init gpio_controller_driver_init(void) {
                     gpio_direction_input(START_PIN);
                     start_irq_number = gpio_to_irq(START_PIN);
                     if (request_irq(start_irq_number, start_press_interrupt, IRQF_TRIGGER_HIGH, "gpio_controller_device", NULL)) {
-                        goto unset_start_press;
+                        return -1;//goto unset_start_press;
                     }
                     if (request_irq(start_irq_number, start_release_interrupt, IRQF_TRIGGER_LOW, "gpio_controller_device", NULL)) {
-                        goto unset_start_release;
+                        return -1;//goto unset_start_release;
                     }
                 }
             } else {
-                goto unset_right_shoulder_release;
+                return -1;//goto unset_right_shoulder_release;
             }
 
             if (gpio_is_valid(SELECT_PIN) == true) {
@@ -319,14 +319,14 @@ static int __init gpio_controller_driver_init(void) {
                     gpio_direction_input(SELECT_PIN);
                     select_irq_number = gpio_to_irq(SELECT_PIN);
                     if (request_irq(select_irq_number, select_press_interrupt, IRQF_TRIGGER_HIGH, "gpio_controller_device", NULL)) {
-                        goto unset_select_press;
+                        return -1;//goto unset_select_press;
                     }
                     if (request_irq(select_irq_number, select_release_interrupt, IRQF_TRIGGER_LOW, "gpio_controller_device", NULL)) {
-                        goto unset_select_release;
+                        return -1;//goto unset_select_release;
                     }
                 }
             } else {
-                goto unset_start_release;
+                return -1;//goto unset_start_release;
             }
 
             if (gpio_is_valid(A_PIN) == true) {
@@ -336,14 +336,14 @@ static int __init gpio_controller_driver_init(void) {
                     gpio_direction_input(A_PIN);
                     a_irq_number = gpio_to_irq(A_PIN);
                     if (request_irq(a_irq_number, a_press_interrupt, IRQF_TRIGGER_HIGH, "gpio_controller_device", NULL)) {
-                        goto unset_a_press;
+                        return -1;//goto unset_a_press;
                     }
                     if (request_irq(a_irq_number, a_release_interrupt, IRQF_TRIGGER_LOW, "gpio_controller_device", NULL)) {
-                        goto unset_a_release;
+                        return -1;//goto unset_a_release;
                     }
                 }
             } else {
-                goto unset_select_release;
+                return -1;//goto unset_select_release;
             }
 
             if (gpio_is_valid(B_PIN) == true) {
@@ -353,14 +353,14 @@ static int __init gpio_controller_driver_init(void) {
                     gpio_direction_input(B_PIN);
                     b_irq_number = gpio_to_irq(B_PIN);
                     if (request_irq(b_irq_number, b_press_interrupt, IRQF_TRIGGER_HIGH, "gpio_controller_device", NULL)) {
-                        goto unset_b_press;
+                        return -1;//goto unset_b_press;
                     }
                     if (request_irq(b_irq_number, b_release_interrupt, IRQF_TRIGGER_LOW, "gpio_controller_device", NULL)) {
-                        goto unset_b_release;
+                        return -1;//goto unset_b_release;
                     }
                 }
             } else {
-                goto unset_a_release;
+                return -1;//goto unset_a_release;
             }
 
             if (gpio_is_valid(X_PIN) == true) {
@@ -370,14 +370,14 @@ static int __init gpio_controller_driver_init(void) {
                     gpio_direction_input(X_PIN);
                     x_irq_number = gpio_to_irq(X_PIN);
                     if (request_irq(x_irq_number, x_press_interrupt, IRQF_TRIGGER_HIGH, "gpio_controller_device", NULL)) {
-                        goto unset_x_press;
+                        return -1;//goto unset_x_press;
                     }
                     if (request_irq(x_irq_number, x_release_interrupt, IRQF_TRIGGER_LOW, "gpio_controller_device", NULL)) {
-                        goto unset_x_release;
+                        return -1;//goto unset_x_release;
                     }
                 }
             } else {
-                goto unset_b_release;
+                return -1;//goto unset_b_release;
             }
 
             if (gpio_is_valid(Y_PIN) == true) {
@@ -387,14 +387,14 @@ static int __init gpio_controller_driver_init(void) {
                     gpio_direction_input(Y_PIN);
                     y_irq_number = gpio_to_irq(Y_PIN);
                     if (request_irq(y_irq_number, y_press_interrupt, IRQF_TRIGGER_HIGH, "gpio_controller_device", NULL)) {
-                        goto unset_y_press;
+                        return -1;//goto unset_y_press;
                     }
                     if (request_irq(y_irq_number, y_release_interrupt, IRQF_TRIGGER_LOW, "gpio_controller_device", NULL)) {
-                        goto unset_y_release;
+                        return -1;//goto unset_y_release;
                     }
                 }
             } else {
-                goto unset_x_release;
+                return -1;//goto unset_x_release;
             }
 
             return 0;
