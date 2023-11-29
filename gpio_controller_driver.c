@@ -10,6 +10,7 @@
 #include <linux/uaccess.h>
 #include <linux/jiffies.h>
 #include <linux/interrupt.h>
+#include <linux/input.h>
 
 extern unsigned long volatile jiffies;
 unsigned long old_jiffie = 0;
@@ -51,11 +52,12 @@ static irqreturn_t gpio_irq_handler(int irq, void *dev_id) {
     local_irq_save(flags);
     unsigned long diff = jiffies - old_jiffie;
     if (diff < 20) {
-        pr_info("SHORT IRQ EVENT");
+        pr_info("BOUNCE");
         return IRQ_HANDLED;
     }
     old_jiffie = jiffies;
-    pr_info("LONG IRQ EVENT");
+    pr_info("RISING EDGE DETECTED");
+    input_report_key(&dev, KEY_A, gpio_get_value(11));
     local_irq_restore(flags);
     return IRQ_HANDLED;
 }
