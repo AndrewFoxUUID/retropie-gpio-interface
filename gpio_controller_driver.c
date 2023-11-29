@@ -207,6 +207,7 @@ static int __init gpio_controller_driver_init(void) {
     if (gpio_controller_dev) {
         gpio_controller_dev->name = "gpio_controller_device";
         set_bit(EV_KEY, gpio_controller_dev->evbit);
+        set_bit(EV_REP, gpio_controller_dev->evbit);
         set_bit(LEFT_SHOULDER_KEY, gpio_controller_dev->keybit);
         set_bit(RIGHT_SHOULDER_KEY, gpio_controller_dev->keybit);
         set_bit(START_KEY, gpio_controller_dev->keybit);
@@ -215,16 +216,6 @@ static int __init gpio_controller_driver_init(void) {
         set_bit(B_KEY, gpio_controller_dev->keybit);
         set_bit(X_KEY, gpio_controller_dev->keybit);
         set_bit(Y_KEY, gpio_controller_dev->keybit);
-
-        /*gpio_controller_dev->evbit[0] = BIT_MASK(EV_KEY);
-        gpio_controller_dev->keybit[BIT_WORD(LEFT_SHOULDER_KEY)] = BIT_MASK(LEFT_SHOULDER_KEY);
-        gpio_controller_dev->keybit[BIT_WORD(RIGHT_SHOULDER_KEY)] = BIT_MASK(RIGHT_SHOULDER_KEY);
-        gpio_controller_dev->keybit[BIT_WORD(START_KEY)] = BIT_MASK(START_KEY);
-        gpio_controller_dev->keybit[BIT_WORD(SELECT_KEY)] = BIT_MASK(SELECT_KEY);
-        gpio_controller_dev->keybit[BIT_WORD(A_KEY)] = BIT_MASK(A_KEY);
-        gpio_controller_dev->keybit[BIT_WORD(B_KEY)] = BIT_MASK(B_KEY);
-        gpio_controller_dev->keybit[BIT_WORD(X_KEY)] = BIT_MASK(X_KEY);
-        gpio_controller_dev->keybit[BIT_WORD(Y_KEY)] = BIT_MASK(Y_KEY);*/
 
         if (input_register_device(gpio_controller_dev) == 0) {
             char pin_code[8] = "GPIO_XX\0";
