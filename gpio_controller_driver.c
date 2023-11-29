@@ -337,13 +337,13 @@ static int __init gpio_controller_driver_init(void) {
                 pin_code[6] = '0' + (VRX_PIN % 10);
                 if (gpio_request(VRX_PIN, pin_code) == 0) {
                     gpio_direction_input(VRX_PIN);
-                    gpio_export(VRX_PIN);
+                    gpio_export(VRX_PIN, 0);
                 }
                 pin_code[5] = '0' + (VRY_PIN / 10);
                 pin_code[6] = '0' + (VRY_PIN % 10);
                 if (gpio_request(VRY_PIN, pin_code) == 0) {
                     gpio_direction_input(VRY_PIN);
-                    gpio_export(VRY_PIN);
+                    gpio_export(VRY_PIN, 0);
                 }
             }
 
