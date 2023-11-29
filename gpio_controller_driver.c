@@ -1,10 +1,15 @@
+#include <linux/kernel.h>
 #include <linux/input.h>
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/interrupt.h>
 #include <linux/gpio.h>
 #include <linux/jiffies.h>
-#include <linux/kernel.h>
+
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Andrew Fox");
+MODULE_DESCRIPTION("A driver for a GPIO based custom RetroPie controller");
+MODULE_VERSION("0.2");
 
 #define LEFT_SHOULDER_PIN   23
 #define RIGHT_SHOULDER_PIN  24
@@ -480,8 +485,3 @@ static void __exit gpio_controller_driver_exit(void) {
 
 module_init(gpio_controller_driver_init);
 module_exit(gpio_controller_driver_exit);
-
-MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Andrew Fox");
-MODULE_DESCRIPTION("A driver for a GPIO based custom RetroPie controller");
-MODULE_VERSION("0.2");
