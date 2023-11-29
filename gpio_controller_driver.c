@@ -47,6 +47,7 @@ static int __init gpio_controller_driver_init(void) {
 static void __exit gpio_controller_driver_exit(void) {
     input_unregister_device(gpio_controller_dev);
     free_irq(pin11_irq_number, gpio_controller_interrupt);
+    gpio_free(11);
 }
 
 module_init(gpio_controller_driver_init);
