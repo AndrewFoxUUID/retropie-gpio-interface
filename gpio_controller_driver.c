@@ -36,7 +36,7 @@ MODULE_VERSION("0.2");
 #define LEFT_KEY            KEY_LEFT
 #define RIGHT_KEY           KEY_RIGHT
 
-#define DEBOUNCE_TIME       5
+#define DEBOUNCE_TIME       1
 
 extern unsigned long volatile jiffies;
 
