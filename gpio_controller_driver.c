@@ -23,8 +23,8 @@ static int __init gpio_controller_driver_init(void) {
             gpio_direction_input(11);
             pin11_irq_number = gpio_to_irq(11);
             if (request_irq(pin11_irq_number, gpio_controller_interrupt, IRQF_TRIGGER_RISING, "gpio_controller_device", NULL) == 0) {
-                gpio_controller_device = input_allocate_device();
-                if (gpio_controller_device) {
+                gpio_controller_dev = input_allocate_device();
+                if (gpio_controller_dev) {
                     button_dev->evbit[0] = BIT_MASK(EV_KEY);
                     button_dev->keybit[BIT_WORD(BTN_A)] = BIT_MASK(BTN_A);
                     if (input_register_device(gpio_controller_dev) == 0){
