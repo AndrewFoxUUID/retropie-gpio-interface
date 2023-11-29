@@ -12,8 +12,11 @@ static struct input_dev *gpio_controller_dev;
 unsigned int pin11_irq_number;
 
 static irqreturn_t gpio_controller_interrupt(int irq, void *dummy) {
+    static unsigned long flags;
+    local_irq_save(flags);
     input_report_key(gpio_controller_dev, KEY_A, gpio_get_value(11));
     input_sync(gpio_controller_dev);
+    local_irq_restore(flags);
     return IRQ_HANDLED;
 }
 
@@ -25,6 +28,7 @@ static int __init gpio_controller_driver_init(void) {
             if (request_irq(pin11_irq_number, gpio_controller_interrupt, IRQF_TRIGGER_RISING, "gpio_controller_device", NULL) == 0) {
                 gpio_controller_dev = input_allocate_device();
                 if (gpio_controller_dev) {
+                    gpio_controller_dev->name = "gpio_controller_device";
                     gpio_controller_dev->evbit[0] = BIT_MASK(EV_KEY);
                     gpio_controller_dev->keybit[BIT_WORD(KEY_A)] = BIT_MASK(KEY_A);
                     if (input_register_device(gpio_controller_dev) == 0){
