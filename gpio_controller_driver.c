@@ -263,8 +263,12 @@ static int __init gpio_controller_driver_init(void) {
         gpio_controller_dev->keybit[BIT_WORD(Y_KEY)] = BIT_MASK(Y_KEY);
 
         if (input_register_device(gpio_controller_dev) == 0) {
+            char[7] pin_code = "GPIO_XX";
+
             if (gpio_is_valid(LEFT_SHOULDER_PIN) == true) {
-                if (gpio_request(LEFT_SHOULDER_PIN, (const char *) sprintf("GPIO_%i", LEFT_SHOULDER_PIN)) == 0) {
+                pin_code[5] = '0' + (LEFT_SHOULDER_PIN / 10);
+                pin_code[6] = '0' + (LEFT_SHOULDER_PIN % 10);
+                if (gpio_request(LEFT_SHOULDER_PIN, pin_code) == 0) {
                     gpio_direction_input(LEFT_SHOULDER_PIN);
                     left_shoulder_irq_number = gpio_to_irq(LEFT_SHOULDER_PIN);
                     if (request_irq(left_shoulder_irq_number, left_shoulder_press_interrupt, IRQF_TRIGGER_HIGH, "gpio_controller_device", NULL)) {
@@ -279,7 +283,9 @@ static int __init gpio_controller_driver_init(void) {
             }
 
             if (gpio_is_valid(RIGHT_SHOULDER_PIN) == true) {
-                if (gpio_request(RIGHT_SHOULDER_PIN, (const char *) sprintf("GPIO_%i", RIGHT_SHOULDER_PIN)) == 0) {
+                pin_code[5] = '0' + (RIGHT_SHOULDER_PIN / 10);
+                pin_code[6] = '0' + (RIGHT_SHOULDER_PIN % 10);
+                if (gpio_request(RIGHT_SHOULDER_PIN, pin_code) == 0) {
                     gpio_direction_input(RIGHT_SHOULDER_PIN);
                     right_shoulder_irq_number = gpio_to_irq(RIGHT_SHOULDER_PIN);
                     if (request_irq(right_shoulder_irq_number, right_shoulder_press_interrupt, IRQF_TRIGGER_HIGH, "gpio_controller_device", NULL)) {
@@ -294,7 +300,9 @@ static int __init gpio_controller_driver_init(void) {
             }
 
             if (gpio_is_valid(START_PIN) == true) {
-                if (gpio_request(START_PIN, (const char *) sprintf("GPIO_%i", START_PIN)) == 0) {
+                pin_code[5] = '0' + (START_PIN / 10);
+                pin_code[6] = '0' + (START_PIN % 10);
+                if (gpio_request(START_PIN, pin_code) == 0) {
                     gpio_direction_input(START_PIN);
                     start_irq_number = gpio_to_irq(START_PIN);
                     if (request_irq(start_irq_number, start_press_interrupt, IRQF_TRIGGER_HIGH, "gpio_controller_device", NULL)) {
@@ -309,7 +317,9 @@ static int __init gpio_controller_driver_init(void) {
             }
 
             if (gpio_is_valid(SELECT_PIN) == true) {
-                if (gpio_request(SELECT_PIN, (const char *) sprintf("GPIO_%i", SELECT_PIN)) == 0) {
+                pin_code[5] = '0' + (SELECT_PIN / 10);
+                pin_code[6] = '0' + (SELECT_PIN % 10);
+                if (gpio_request(SELECT_PIN, pin_code) == 0) {
                     gpio_direction_input(SELECT_PIN);
                     select_irq_number = gpio_to_irq(SELECT_PIN);
                     if (request_irq(select_irq_number, select_press_interrupt, IRQF_TRIGGER_HIGH, "gpio_controller_device", NULL)) {
@@ -324,7 +334,9 @@ static int __init gpio_controller_driver_init(void) {
             }
 
             if (gpio_is_valid(A_PIN) == true) {
-                if (gpio_request(A_PIN, (const char *) sprintf("GPIO_%i", A_PIN)) == 0) {
+                pin_code[5] = '0' + (A_PIN / 10);
+                pin_code[6] = '0' + (A_PIN % 10);
+                if (gpio_request(A_PIN, pin_code) == 0) {
                     gpio_direction_input(A_PIN);
                     a_irq_number = gpio_to_irq(A_PIN);
                     if (request_irq(a_irq_number, a_press_interrupt, IRQF_TRIGGER_HIGH, "gpio_controller_device", NULL)) {
@@ -339,7 +351,9 @@ static int __init gpio_controller_driver_init(void) {
             }
 
             if (gpio_is_valid(B_PIN) == true) {
-                if (gpio_request(B_PIN, (const char *) sprintf("GPIO_%i", B_PIN)) == 0) {
+                pin_code[5] = '0' + (B_PIN / 10);
+                pin_code[6] = '0' + (B_PIN % 10);
+                if (gpio_request(B_PIN, pin_code) == 0) {
                     gpio_direction_input(B_PIN);
                     b_irq_number = gpio_to_irq(B_PIN);
                     if (request_irq(b_irq_number, b_press_interrupt, IRQF_TRIGGER_HIGH, "gpio_controller_device", NULL)) {
@@ -354,7 +368,9 @@ static int __init gpio_controller_driver_init(void) {
             }
 
             if (gpio_is_valid(X_PIN) == true) {
-                if (gpio_request(X_PIN, (const char *) sprintf("GPIO_%i", X_PIN)) == 0) {
+                pin_code[5] = '0' + (X_PIN / 10);
+                pin_code[6] = '0' + (X_PIN % 10);
+                if (gpio_request(X_PIN, pin_code) == 0) {
                     gpio_direction_input(X_PIN);
                     x_irq_number = gpio_to_irq(X_PIN);
                     if (request_irq(x_irq_number, x_press_interrupt, IRQF_TRIGGER_HIGH, "gpio_controller_device", NULL)) {
@@ -369,7 +385,9 @@ static int __init gpio_controller_driver_init(void) {
             }
 
             if (gpio_is_valid(Y_PIN) == true) {
-                if (gpio_request(Y_PIN, (const char *) sprintf("GPIO_%i", Y_PIN)) == 0) {
+                pin_code[5] = '0' + (Y_PIN / 10);
+                pin_code[6] = '0' + (Y_PIN % 10);
+                if (gpio_request(Y_PIN, pin_code) == 0) {
                     gpio_direction_input(Y_PIN);
                     y_irq_number = gpio_to_irq(Y_PIN);
                     if (request_irq(y_irq_number, y_press_interrupt, IRQF_TRIGGER_HIGH, "gpio_controller_device", NULL)) {
