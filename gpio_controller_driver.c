@@ -348,13 +348,12 @@ static int __init gpio_controller_driver_init(void) {
                 if (gpio_request(A_PIN, pin_code) == 0) {
                     gpio_direction_input(A_PIN);
                     a_irq_number = gpio_to_irq(A_PIN);
-                    gpio_export(A_PIN, 0);
-                    /*if (request_irq(a_irq_number, a_press_interrupt, IRQF_TRIGGER_HIGH, "gpio_controller_device", NULL)) {
+                    if (request_irq(a_irq_number, a_press_interrupt, IRQF_TRIGGER_HIGH, "gpio_controller_device", NULL)) {
                         return -1;//goto unset_a_press;
-                    }*/
-                    /*if (request_irq(a_irq_number, a_release_interrupt, IRQF_TRIGGER_LOW, "gpio_controller_device", NULL)) {
+                    }
+                    if (request_irq(a_irq_number, a_release_interrupt, IRQF_TRIGGER_LOW, "gpio_controller_device", NULL)) {
                         return -1;//goto unset_a_release;
-                    }*/
+                    }
                 }
 
                 pr_info("init success");
