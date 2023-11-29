@@ -51,14 +51,14 @@ static int gpio_controller_release(struct inode *inode, struct file *file) {
 static irqreturn_t gpio_irq_handler(int irq, void *dev_id) {
     static unsigned long flags = 0;
     local_irq_save(flags);
-    unsigned long diff = jiffies - old_jiffie;
-    if (diff < 20) {
+    if (jiffies - old_jiffie < 20) {
         pr_info("BOUNCE");
         return IRQ_HANDLED;
     }
     old_jiffie = jiffies;
     pr_info("RISING EDGE DETECTED");
-    input_report_key(&button_dev, KEY_A, gpio_get_value(11));
+    input_report_key(button_dev, KEY_A, gpio_get_value(11));
+    input_sync(button_dev);
     local_irq_restore(flags);
     return IRQ_HANDLED;
 }
