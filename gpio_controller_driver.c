@@ -36,7 +36,7 @@ MODULE_VERSION("0.2");
 #define LEFT_KEY            KEY_LEFT
 #define RIGHT_KEY           KEY_RIGHT
 
-#define DEBOUNCE_TIME       15
+#define DEBOUNCE_TIME       10
 
 extern unsigned long volatile jiffies;
 
@@ -359,7 +359,7 @@ static int __init gpio_controller_driver_init(void) {
     return -1;
 }
 
-static void __exit gpio_controller_driver_exit(void) {
+static void __exit gpio_controller_driver_exit(void) { // note: this doesn't work?
     free_irq(left_shoulder_irq_number, left_shoulder_interrupt);
     free_irq(right_shoulder_irq_number, right_shoulder_interrupt);
     free_irq(start_irq_number, start_interrupt);
