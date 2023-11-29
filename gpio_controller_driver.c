@@ -206,15 +206,15 @@ static int __init gpio_controller_driver_init(void) {
     gpio_controller_dev = input_allocate_device();
     if (gpio_controller_dev) {
         gpio_controller_dev->name = "gpio_controller_device";
-        set_bit(EV_KEY, button_dev->evbit);
-        set_bit(LEFT_SHOULDER_KEY, button_dev->keybit);
-        set_bit(RIGHT_SHOULDER_KEY, button_dev->keybit);
-        set_bit(START_KEY, button_dev->keybit);
-        set_bit(SELECT_KEY, button_dev->keybit);
-        set_bit(A_KEY, button_dev->keybit);
-        set_bit(B_KEY, button_dev->keybit);
-        set_bit(X_KEY, button_dev->keybit);
-        set_bit(Y_KEY, button_dev->keybit);
+        set_bit(EV_KEY, gpio_controller_dev->evbit);
+        set_bit(LEFT_SHOULDER_KEY, gpio_controller_dev->keybit);
+        set_bit(RIGHT_SHOULDER_KEY, gpio_controller_dev->keybit);
+        set_bit(START_KEY, gpio_controller_dev->keybit);
+        set_bit(SELECT_KEY, gpio_controller_dev->keybit);
+        set_bit(A_KEY, gpio_controller_dev->keybit);
+        set_bit(B_KEY, gpio_controller_dev->keybit);
+        set_bit(X_KEY, gpio_controller_dev->keybit);
+        set_bit(Y_KEY, gpio_controller_dev->keybit);
 
         /*gpio_controller_dev->evbit[0] = BIT_MASK(EV_KEY);
         gpio_controller_dev->keybit[BIT_WORD(LEFT_SHOULDER_KEY)] = BIT_MASK(LEFT_SHOULDER_KEY);
