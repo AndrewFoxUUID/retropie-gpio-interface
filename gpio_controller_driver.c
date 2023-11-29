@@ -25,7 +25,7 @@ static int __init gpio_controller_driver_init(void) {
         if (gpio_request(11, "GPIO_11") == 0) {
             gpio_direction_input(11);
             pin11_irq_number = gpio_to_irq(11);
-            if (request_irq(pin11_irq_number, gpio_controller_interrupt, IRQF_TRIGGER_RISING, "gpio_controller_device", NULL) == 0) {
+            if (request_irq(pin11_irq_number, gpio_controller_interrupt, IRQF_TRIGGER_HIGH, "gpio_controller_device", NULL) == 0) {
                 gpio_controller_dev = input_allocate_device();
                 if (gpio_controller_dev) {
                     gpio_controller_dev->name = "gpio_controller_device";
