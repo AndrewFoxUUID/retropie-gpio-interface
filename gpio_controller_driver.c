@@ -57,23 +57,27 @@ unsigned long old_a_jiffie = 0;
 unsigned long old_b_jiffie = 0;
 unsigned long old_x_jiffie = 0;
 unsigned long old_y_jiffie = 0;
-bool left_shoulder_val = false;
-bool right_shoulder_val = false;
-bool start_val = false;
-bool select_val = false;
-bool a_val = false;
-bool b_val = false;
-bool x_val = false;
-bool y_val = false;
+int left_shoulder_val = 0;
+int right_shoulder_val = 0;
+int start_val = 0;
+int select_val = 0;
+int a_val = 0;
+int b_val = 0;
+int x_val = 0;
+int y_val = 0;
 
 static irqreturn_t left_shoulder_interrupt(int irq, void *dummy) {
     static unsigned long flags;
     local_irq_save(flags);
     if (jiffies - old_left_shoulder_jiffie > DEBOUNCE_TIME) {
-        input_report_key(gpio_controller_dev, LEFT_SHOULDER_KEY, left_shoulder_val);//gpio_get_value(LEFT_SHOULDER_PIN)
+        if (gpio_get_value(LEFT_SHOULDER_PIN)) {
+            left_shoulder_val++;
+        } else {
+            left_shoulder_val = 0;
+        }
+        input_report_key(gpio_controller_dev, LEFT_SHOULDER_KEY, left_shoulder_val);
         input_sync(gpio_controller_dev);
         old_left_shoulder_jiffie = jiffies;
-        left_shoulder_val = !left_shoulder_val;
     }
     local_irq_restore(flags);
     return IRQ_HANDLED;
@@ -83,10 +87,14 @@ static irqreturn_t right_shoulder_interrupt(int irq, void *dummy) {
     static unsigned long flags;
     local_irq_save(flags);
     if (jiffies - old_right_shoulder_jiffie > DEBOUNCE_TIME) {
-        input_report_key(gpio_controller_dev, RIGHT_SHOULDER_KEY, right_shoulder_val);//gpio_get_value(RIGHT_SHOULDER_PIN)
+        if (gpio_get_value(RIGHT_SHOULDER_PIN)) {
+            right_shoulder_val++;
+        } else {
+            right_shoulder_val = 0;
+        }
+        input_report_key(gpio_controller_dev, RIGHT_SHOULDER_KEY, right_shoulder_val);
         input_sync(gpio_controller_dev);
         old_right_shoulder_jiffie = jiffies;
-        right_shoulder_val = !right_shoulder_val;
     }
     local_irq_restore(flags);
     return IRQ_HANDLED;
@@ -96,10 +104,14 @@ static irqreturn_t start_interrupt(int irq, void *dummy) {
     static unsigned long flags;
     local_irq_save(flags);
     if (jiffies - old_start_jiffie > DEBOUNCE_TIME) {
-        input_report_key(gpio_controller_dev, START_KEY, start_val);//gpio_get_value(START_PIN)
+        if (gpio_get_value(START_PIN)) {
+            start_val++;
+        } else {
+            start_val = 0;
+        }
+        input_report_key(gpio_controller_dev, START_KEY, start_val);
         input_sync(gpio_controller_dev);
         old_start_jiffie = jiffies;
-        start_val = !start_val;
     }
     local_irq_restore(flags);
     return IRQ_HANDLED;
@@ -109,10 +121,14 @@ static irqreturn_t select_interrupt(int irq, void *dummy) {
     static unsigned long flags;
     local_irq_save(flags);
     if (jiffies - old_select_jiffie > DEBOUNCE_TIME) {
-        input_report_key(gpio_controller_dev, SELECT_KEY, select_val);//gpio_get_value(SELECT_PIN)
+        if (gpio_get_value(SELECT_PIN)) {
+            select_val++;
+        } else {
+            select_val = 0;
+        }
+        input_report_key(gpio_controller_dev, SELECT_KEY, select_val);
         input_sync(gpio_controller_dev);
         old_select_jiffie = jiffies;
-        select_val = !select_val;
     }
     local_irq_restore(flags);
     return IRQ_HANDLED;
@@ -122,11 +138,14 @@ static irqreturn_t a_interrupt(int irq, void *dummy) {
     static unsigned long flags;
     local_irq_save(flags);
     if (jiffies - old_a_jiffie > DEBOUNCE_TIME) {
-        pr_info("UNBOUNCED INTERRUPT");
-        input_report_key(gpio_controller_dev, A_KEY, a_val);//gpio_get_value(A_PIN)
+        if (gpio_get_value(A_PIN)) {
+            a_val++;
+        } else {
+            a_val = 0;
+        }
+        input_report_key(gpio_controller_dev, A_KEY, a_val);
         input_sync(gpio_controller_dev);
         old_a_jiffie = jiffies;
-        a_val = !a_val;
     }
     local_irq_restore(flags);
     return IRQ_HANDLED;
@@ -136,10 +155,14 @@ static irqreturn_t b_interrupt(int irq, void *dummy) {
     static unsigned long flags;
     local_irq_save(flags);
     if (jiffies - old_b_jiffie > DEBOUNCE_TIME) {
-        input_report_key(gpio_controller_dev, B_KEY, b_val);//gpio_get_value(B_PIN)
+        if (gpio_get_value(B_PIN)) {
+            b_val++;
+        } else {
+            b_val = 0;
+        }
+        input_report_key(gpio_controller_dev, B_KEY, b_val);
         input_sync(gpio_controller_dev);
         old_b_jiffie = jiffies;
-        b_val = !b_val;
     }
     local_irq_restore(flags);
     return IRQ_HANDLED;
@@ -149,10 +172,14 @@ static irqreturn_t x_interrupt(int irq, void *dummy) {
     static unsigned long flags;
     local_irq_save(flags);
     if (jiffies - old_x_jiffie > DEBOUNCE_TIME) {
-        input_report_key(gpio_controller_dev, X_KEY, x_val);//gpio_get_value(X_PIN)
+        if (gpio_get_value(X_PIN)) {
+            x_val++;
+        } else {
+            x_val = 0;
+        }
+        input_report_key(gpio_controller_dev, X_KEY, x_val);
         input_sync(gpio_controller_dev);
         old_x_jiffie = jiffies;
-        x_val = !x_val;
     }
     local_irq_restore(flags);
     return IRQ_HANDLED;
@@ -162,10 +189,14 @@ static irqreturn_t y_interrupt(int irq, void *dummy) {
     static unsigned long flags;
     local_irq_save(flags);
     if (jiffies - old_y_jiffie > DEBOUNCE_TIME) {
-        input_report_key(gpio_controller_dev, Y_KEY, y_val);//gpio_get_value(Y_PIN)
+        if (gpio_get_value(Y_PIN)) {
+            y_val++;
+        } else {
+            y_val = 0;
+        }
+        input_report_key(gpio_controller_dev, Y_KEY, y_val);
         input_sync(gpio_controller_dev);
         old_y_jiffie = jiffies;
-        y_val = !y_val;
     }
     local_irq_restore(flags);
     return IRQ_HANDLED;
@@ -175,7 +206,17 @@ static int __init gpio_controller_driver_init(void) {
     gpio_controller_dev = input_allocate_device();
     if (gpio_controller_dev) {
         gpio_controller_dev->name = "gpio_controller_device";
-        gpio_controller_dev->evbit[0] = BIT_MASK(EV_KEY);
+        set_bit(EV_KEY, button_dev->evbit);
+        set_bit(LEFT_SHOULDER_KEY, button_dev->keybit);
+        set_bit(RIGHT_SHOULDER_KEY, button_dev->keybit);
+        set_bit(START_KEY, button_dev->keybit);
+        set_bit(SELECT_KEY, button_dev->keybit);
+        set_bit(A_KEY, button_dev->keybit);
+        set_bit(B_KEY, button_dev->keybit);
+        set_bit(X_KEY, button_dev->keybit);
+        set_bit(Y_KEY, button_dev->keybit);
+
+        /*gpio_controller_dev->evbit[0] = BIT_MASK(EV_KEY);
         gpio_controller_dev->keybit[BIT_WORD(LEFT_SHOULDER_KEY)] = BIT_MASK(LEFT_SHOULDER_KEY);
         gpio_controller_dev->keybit[BIT_WORD(RIGHT_SHOULDER_KEY)] = BIT_MASK(RIGHT_SHOULDER_KEY);
         gpio_controller_dev->keybit[BIT_WORD(START_KEY)] = BIT_MASK(START_KEY);
@@ -183,7 +224,7 @@ static int __init gpio_controller_driver_init(void) {
         gpio_controller_dev->keybit[BIT_WORD(A_KEY)] = BIT_MASK(A_KEY);
         gpio_controller_dev->keybit[BIT_WORD(B_KEY)] = BIT_MASK(B_KEY);
         gpio_controller_dev->keybit[BIT_WORD(X_KEY)] = BIT_MASK(X_KEY);
-        gpio_controller_dev->keybit[BIT_WORD(Y_KEY)] = BIT_MASK(Y_KEY);
+        gpio_controller_dev->keybit[BIT_WORD(Y_KEY)] = BIT_MASK(Y_KEY);*/
 
         if (input_register_device(gpio_controller_dev) == 0) {
             char pin_code[8] = "GPIO_XX\0";
@@ -194,7 +235,7 @@ static int __init gpio_controller_driver_init(void) {
                 if (gpio_request(LEFT_SHOULDER_PIN, pin_code) == 0) {
                     gpio_direction_input(LEFT_SHOULDER_PIN);
                     left_shoulder_irq_number = gpio_to_irq(LEFT_SHOULDER_PIN);
-                    if (request_irq(left_shoulder_irq_number, left_shoulder_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL)) {
+                    if (request_irq(left_shoulder_irq_number, left_shoulder_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {
                         goto unset_left_shoulder;
                     }
                 }
@@ -208,7 +249,7 @@ static int __init gpio_controller_driver_init(void) {
                 if (gpio_request(RIGHT_SHOULDER_PIN, pin_code) == 0) {
                     gpio_direction_input(RIGHT_SHOULDER_PIN);
                     right_shoulder_irq_number = gpio_to_irq(RIGHT_SHOULDER_PIN);
-                    if (request_irq(right_shoulder_irq_number, right_shoulder_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL)) {
+                    if (request_irq(right_shoulder_irq_number, right_shoulder_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {
                         goto unset_right_shoulder;
                     }
                 }
@@ -222,7 +263,7 @@ static int __init gpio_controller_driver_init(void) {
                 if (gpio_request(START_PIN, pin_code) == 0) {
                     gpio_direction_input(START_PIN);
                     start_irq_number = gpio_to_irq(START_PIN);
-                    if (request_irq(start_irq_number, start_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL)) {
+                    if (request_irq(start_irq_number, start_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {
                         goto unset_start;
                     }
                 }
@@ -236,7 +277,7 @@ static int __init gpio_controller_driver_init(void) {
                 if (gpio_request(SELECT_PIN, pin_code) == 0) {
                     gpio_direction_input(SELECT_PIN);
                     select_irq_number = gpio_to_irq(SELECT_PIN);
-                    if (request_irq(select_irq_number, select_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL)) {
+                    if (request_irq(select_irq_number, select_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {
                         goto unset_select;
                     }
                 }
@@ -264,7 +305,7 @@ static int __init gpio_controller_driver_init(void) {
                 if (gpio_request(B_PIN, pin_code) == 0) {
                     gpio_direction_input(B_PIN);
                     b_irq_number = gpio_to_irq(B_PIN);
-                    if (request_irq(b_irq_number, b_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL)) {
+                    if (request_irq(b_irq_number, b_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {
                         goto unset_b;
                     }
                 }
@@ -278,7 +319,7 @@ static int __init gpio_controller_driver_init(void) {
                 if (gpio_request(X_PIN, pin_code) == 0) {
                     gpio_direction_input(X_PIN);
                     x_irq_number = gpio_to_irq(X_PIN);
-                    if (request_irq(x_irq_number, x_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL)) {
+                    if (request_irq(x_irq_number, x_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {
                         goto unset_x;
                     }
                 }
@@ -292,7 +333,7 @@ static int __init gpio_controller_driver_init(void) {
                 if (gpio_request(Y_PIN, pin_code) == 0) {
                     gpio_direction_input(Y_PIN);
                     y_irq_number = gpio_to_irq(Y_PIN);
-                    if (request_irq(y_irq_number, y_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL)) {
+                    if (request_irq(y_irq_number, y_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {
                         goto unset_y;
                     }
                 }
