@@ -368,7 +368,7 @@ static int __init gpio_controller_driver_init(void) {
                     if (request_irq(a_irq_number, a_release_interrupt, IRQF_TRIGGER_LOW, "gpio_controller_device", NULL)) {
                         return -1;//goto unset_a_release;
                     }*/
-                    if (request_irq(a_irq_number, a_interrupt, IRQF_TRIGGER_HIGH | IRQF_TRIGGER_LOW, "gpio_controller_device", NULL) < 0) {
+                    if (!enable_irq(A_PIN) || request_irq(a_irq_number, a_interrupt, IRQF_TRIGGER_HIGH | IRQF_TRIGGER_LOW, "gpio_controller_device", NULL) < 0) {
                         return -1;//goto unset_a;
                     }
                 }
