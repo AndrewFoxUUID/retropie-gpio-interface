@@ -34,10 +34,6 @@
 
 extern unsigned long volatile jiffies;
 
-static irqreturn_t gpio_controller_interrupt(int irq, void *dummy);
-static int __init gpio_controller_driver_init(void);
-static void __exit gpio_controller_driver_exit(void);
-
 static struct input_dev *gpio_controller_dev;
 unsigned int left_shoulder_irq_number;
 unsigned int right_shoulder_irq_number;
@@ -401,16 +397,9 @@ static int __init gpio_controller_driver_init(void) {
                 goto unset_x_release;
             }
 
-            // TEMP FIX
-            if (gpio_is_valid(14) == true) {
-                if (gpio_request(14, "GPIO_14") == 0) {
-                    gpio_direction_output(14, 1);
-                }
-            }
-
             return 0;
 
-            unset_y_release:
+            /*unset_y_release:
                 free_irq(y_irq_number, y_release_interrupt);
             unset_y_press:
                 free_irq(y_irq_number, y_press_interrupt);
@@ -443,16 +432,16 @@ static int __init gpio_controller_driver_init(void) {
             unset_left_shoulder_press:
                 free_irq(left_shoulder_irq_number, left_shoulder_press_interrupt);
             unset_all:
-                input_unregister_device(gpio_controller_dev);
+                input_unregister_device(gpio_controller_dev);*/
         } else {
-            input_free_device(gpio_controller_dev);
+            //input_free_device(gpio_controller_dev);
         }
     }
     return -1;
 }
 
 static void __exit gpio_controller_driver_exit(void) {
-    free_irq(left_shoulder_irq_number, left_shoulder_press_interrupt);
+    /*free_irq(left_shoulder_irq_number, left_shoulder_press_interrupt);
     free_irq(left_shoulder_irq_number, left_shoulder_release_interrupt);
     free_irq(right_shoulder_irq_number, right_shoulder_press_interrupt);
     free_irq(right_shoulder_irq_number, right_shoulder_release_interrupt);
@@ -476,7 +465,7 @@ static void __exit gpio_controller_driver_exit(void) {
     gpio_free(B_PIN);
     gpio_free(X_PIN);
     gpio_free(Y_PIN);
-    input_unregister_device(gpio_controller_dev);
+    input_unregister_device(gpio_controller_dev);*/
 }
 
 module_init(gpio_controller_driver_init);
