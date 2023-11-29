@@ -2,6 +2,7 @@
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/interrupt.h>
+#include <linux/gpio.h>
 
 static irqreturn_t gpio_controller_interrupt(int irq, void *dummy);
 static int __init gpio_controller_driver_init(void);
