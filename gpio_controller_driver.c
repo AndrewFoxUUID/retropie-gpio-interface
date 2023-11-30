@@ -79,12 +79,12 @@ struct spi_board_info joystick_spi_dev_info = {
     .bus_num = SPI_BUS_NUM,
     .chip_select = 0,
     .mode = SPI_MODE_1
-}
-static int left_key_val = 0;
-static int right_key_val = 0;
-static int down_key_val = 0;
-static int up_key_val = 0;
-static int i;
+};
+int left_key_val = 0;
+int right_key_val = 0;
+int down_key_val = 0;
+int up_key_val = 0;
+int i;
 
 static irqreturn_t left_shoulder_interrupt(int irq, void *dummy) {
     static unsigned long flags;
@@ -224,11 +224,10 @@ static irqreturn_t y_interrupt(int irq, void *dummy) {
 
 static irqreturn_t joystick_spi_interrupt(int irq, void *dummy) {
     static unsigned long flags;
+    unsigned char x1, x2, y1, y2;
     local_irq_save(flags);
 
     pr_info("joystick interrupt start");
-
-    unsigned char x1, x2, y1, y2;
 
     gpio_set_value(JOYSTICK_CS_PIN, 1); // enable joystick spi device
 
