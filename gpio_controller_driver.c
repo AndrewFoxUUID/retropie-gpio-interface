@@ -80,10 +80,10 @@ struct spi_board_info joystick_spi_dev_info = {
     .chip_select = 0,
     .mode = SPI_MODE_1
 }
-int left_key_val;
-int right_key_val;
-int down_key_val;
-int up_key_val;
+int left_key_val = 0;
+int right_key_val = 0;
+int down_key_val = 0;
+int up_key_val = 0;
 
 static irqreturn_t left_shoulder_interrupt(int irq, void *dummy) {
     static unsigned long flags;
@@ -254,14 +254,15 @@ static irqreturn_t joystick_spi_interrupt(int irq, void *dummy) {
     gpio_set_value(JOYSTICK_DI_PIN, 1);
     msleep(2);
 
-    for (int i = 0; i < 8; i++) {
+    int i;
+    for (i = 0; i < 8; i++) {
         gpio_set_value(JOYSTICK_CLK_PIN, 1);
         msleep(2);
         gpio_set_value(JOYSTICK_CLK_PIN, 0);
         msleep(2);
         x1 = (x1 << 1) | gpio_get_value(JOYSTICK_DO_PIN);
     }
-    for (int i = 0; i < 8; i++) {
+    for (i = 0; i < 8; i++) {
         x2 = x2 | (gpio_get_value(JOYSTICK_DO_PIN) << i);
         gpio_set_value(JOYSTICK_CLK_PIN, 1);
         msleep(2);
