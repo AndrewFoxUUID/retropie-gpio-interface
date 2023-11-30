@@ -384,6 +384,38 @@ static irqreturn_t joystick_spi_interrupt(int irq, void *dummy) {
     return IRQ_HANDLED;
 }
 
+static void unallocate_all(void) {
+    if (joystick_irq_set) {free_irq(SPI_IRQ_NUM, NULL);}
+    if (y_irq_set) {free_irq(y_irq_number, NULL);}
+    if (x_irq_set) {free_irq(x_irq_number, NULL);}
+    if (b_irq_set) {free_irq(b_irq_number, NULL);}
+    if (a_irq_set) {free_irq(a_irq_number, NULL);}
+    if (select_irq_set) {free_irq(select_irq_number, NULL);}
+    if (start_irq_set) {free_irq(start_irq_number, NULL);}
+    if (right_shoulder_irq_set) {free_irq(right_shoulder_irq_number, NULL);}
+    if (left_shoulder_irq_set) {free_irq(left_shoulder_irq_number, NULL);}
+
+    if (joystick_di_pin_requested) {gpio_free(JOYSTICK_DI_PIN);}
+    if (joystick_do_pin_requested) {gpio_free(JOYSTICK_DO_PIN);}
+    if (joystick_clk_pin_requested) {gpio_free(JOYSTICK_CLK_PIN);}
+    if (joystick_cs_pin_requested) {gpio_free(JOYSTICK_CS_PIN);}
+    if (y_pin_requested) {gpio_free(Y_PIN);}
+    if (x_pin_requested) {gpio_free(X_PIN);}
+    if (b_pin_requested) {gpio_free(B_PIN);}
+    if (a_pin_requested) {gpio_free(A_PIN);}
+    if (select_pin_requested) {gpio_free(SELECT_PIN);}
+    if (start_pin_requested) {gpio_free(START_PIN);}
+    if (right_shoulder_pin_requested) {gpio_free(RIGHT_SHOULDER_PIN);}
+    if (left_shoulder_pin_requested) {gpio_free(LEFT_SHOULDER_PIN);}
+
+    if (spi_device_registered) {spi_unregister_device(joystick_spi_dev);}
+    if (input_device_registered) {
+        input_unregister_device(gpio_controller_dev);
+    } else if (input_device_allocated) {
+        input_free_device(gpio_controller_dev);
+    }
+}
+
 static int __init gpio_controller_driver_init(void) {
     gpio_controller_dev = input_allocate_device();
     if (gpio_controller_dev) {
@@ -539,37 +571,12 @@ static int __init gpio_controller_driver_init(void) {
         }
     }
 init_fail:
-    gpio_controller_driver_exit();
+    unallocate_all();
     return -1;
 }
 
 static void __exit gpio_controller_driver_exit(void) {
-    if (joystick_irq_set) {free_irq(SPI_IRQ_NUM, NULL);}
-    if (y_irq_set) {free_irq(y_irq_number, NULL);}
-    if (x_irq_set) {free_irq(x_irq_number, NULL);}
-    if (b_irq_set) {free_irq(b_irq_number, NULL);}
-    if (a_irq_set) {free_irq(a_irq_number, NULL);}
-    if (select_irq_set) {free_irq(select_irq_number, NULL);}
-    if (start_irq_set) {free_irq(start_irq_number, NULL);}
-    if (right_shoulder_irq_set) {free_irq(right_shoulder_irq_number, NULL);}
-    if (left_shoulder_irq_set) {free_irq(left_shoulder_irq_number, NULL);}
-
-    if (joystick_di_pin_requested) {gpio_free(JOYSTICK_DI_PIN);}
-    if (joystick_do_pin_requested) {gpio_free(JOYSTICK_DO_PIN);}
-    if (joystick_clk_pin_requested) {gpio_free(JOYSTICK_CLK_PIN);}
-    if (joystick_cs_pin_requested) {gpio_free(JOYSTICK_CS_PIN);}
-    if (y_pin_requested) {gpio_free(Y_PIN);}
-    if (x_pin_requested) {gpio_free(X_PIN);}
-    if (b_pin_requested) {gpio_free(B_PIN);}
-    if (a_pin_requested) {gpio_free(A_PIN);}
-    if (select_pin_requested) {gpio_free(SELECT_PIN);}
-    if (start_pin_requested) {gpio_free(START_PIN);}
-    if (right_shoulder_pin_requested) {gpio_free(RIGHT_SHOULDER_PIN);}
-    if (left_shoulder_pin_requested) {gpio_free(LEFT_SHOULDER_PIN);}
-
-    if (spi_device_registered) {spi_unregister_device(joystick_spi_dev);}
-    if (input_device_registered) {input_unregister_device(gpio_controller_dev);}
-    if (input_device_allocated) {input_free_device(gpio_controller_dev);}
+    unallocate_all();
 }
 
 module_init(gpio_controller_driver_init);
