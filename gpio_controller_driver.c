@@ -293,14 +293,15 @@ static irqreturn_t joystick_spi_interrupt(int irq, void *dummy) {
     gpio_set_value(JOYSTICK_DI_PIN, 1);
     msleep(2);
 
-    for (int i = 0; i < 8; i++) {
+    int i;
+    for (i = 0; i < 8; i++) {
         gpio_set_value(JOYSTICK_CLK_PIN, 1);
         msleep(2);
         gpio_set_value(JOYSTICK_CLK_PIN, 0);
         msleep(2);
         y1 = (y1 << 1) | gpio_get_value(JOYSTICK_DO_PIN);
     }
-    for (int i = 0; i < 8; i++) {
+    for (i = 0; i < 8; i++) {
         y2 = y2 | (gpio_get_value(JOYSTICK_DO_PIN) << i);
         gpio_set_value(JOYSTICK_CLK_PIN, 1);
         msleep(2);
