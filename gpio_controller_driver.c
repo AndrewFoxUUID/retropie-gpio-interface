@@ -74,7 +74,7 @@ struct spi_master *master;
 static struct spi_device *joystick_spi_dev;
 struct spi_board_info joystick_spi_dev_info = {
     .modalias = "joystick-spi-adc0832-driver",
-    .irq = SPI_IRQ_NUMBER,
+    .irq = SPI_IRQ_NUM,
     .max_speed_hz = 400000,
     .bus_num = SPI_BUS_NUM,
     .chip_select = 0,
@@ -558,7 +558,7 @@ static int __init gpio_controller_driver_init(void) {
 
             pr_info("finished joystick device init");
 
-            if (request_irq(SPI_IRQ_NUMBER, joystick_spi_interrupt, IRQF_SHARED, "gpio_controller_device", NULL) < 0) {
+            if (request_irq(SPI_IRQ_NUM, joystick_spi_interrupt, IRQF_SHARED, "gpio_controller_device", NULL) < 0) {
                 goto unset_joystick_irq;
             }
 
@@ -567,7 +567,7 @@ static int __init gpio_controller_driver_init(void) {
             return 0;
 
             unset_joystick_irq:
-                free_irq(SPI_IRQ_NUMBER, joystick_spi_interrupt);
+                free_irq(SPI_IRQ_NUM, joystick_spi_interrupt);
             unset_joystick_di_pin:
                 gpio_free(JOYSTICK_DI_PIN);
             unset_joystick_do_pin:
@@ -620,7 +620,7 @@ static int __init gpio_controller_driver_init(void) {
 }
 
 static void __exit gpio_controller_driver_exit(void) { // note: this doesn't work?
-    free_irq(SPI_IRQ_NUMBER, joystick_spi_interrupt);
+    free_irq(SPI_IRQ_NUM, joystick_spi_interrupt);
     spi_unregister_device(joystick_spi_dev);
     free_irq(left_shoulder_irq_number, left_shoulder_interrupt);
     free_irq(right_shoulder_irq_number, right_shoulder_interrupt);
