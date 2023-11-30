@@ -79,7 +79,6 @@ struct spi_board_info joystick_spi_dev_info = {
     .chip_select = 0,
     .mode = SPI_MODE_1
 }
-static unsigned int joystick_spi_irq_cookie = 0;
 int left_key_val;
 int right_key_val;
 int down_key_val;
@@ -557,7 +556,7 @@ static int __init gpio_controller_driver_init(void) {
 
             pr_info("finished joystick device init");
 
-            if (request_irq(SPI_IRQ_NUMBER, joystick_spi_interrupt, IRQF_SHARED, "gpio_controller_device", &joystick_spi_irq_cookie) < 0) {
+            if (request_irq(SPI_IRQ_NUMBER, joystick_spi_interrupt, IRQF_SHARED, "gpio_controller_device", NULL) < 0) {
                 goto unset_joystick_irq;
             }
 
@@ -566,7 +565,7 @@ static int __init gpio_controller_driver_init(void) {
             return 0;
 
             unset_joystick_irq:
-                free_irq(SPI_IRQ_NUMBER, &joystick_spi_irq_cookie);
+                free_irq(SPI_IRQ_NUMBER, joystick_spi_interrupt);
             unset_joystick_di_pin:
                 gpio_free(JOYSTICK_DI_PIN);
             unset_joystick_do_pin:
@@ -619,7 +618,7 @@ static int __init gpio_controller_driver_init(void) {
 }
 
 static void __exit gpio_controller_driver_exit(void) { // note: this doesn't work?
-    free_irq(SPI_IRQ_NUMBER, &joystick_spi_irq_cookie);
+    free_irq(SPI_IRQ_NUMBER, joystick_spi_interrupt);
     spi_unregister_device(joystick_spi_dev);
     free_irq(left_shoulder_irq_number, left_shoulder_interrupt);
     free_irq(right_shoulder_irq_number, right_shoulder_interrupt);
