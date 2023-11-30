@@ -45,10 +45,10 @@ MODULE_VERSION("0.3");
 
 extern unsigned long volatile jiffies;
 
-static irqreturn_t left_shoulder_interrupt(int irq, void *dummy)
-static irqreturn_t right_shoulder_interrupt(int irq, void *dummy)
-static irqreturn_t start_interrupt(int irq, void *dummy)
-static irqreturn_t select_interrupt(int irq, void *dummy)
+static irqreturn_t left_shoulder_interrupt(int irq, void *dummy);
+static irqreturn_t right_shoulder_interrupt(int irq, void *dummy);
+static irqreturn_t start_interrupt(int irq, void *dummy);
+static irqreturn_t select_interrupt(int irq, void *dummy);
 static irqreturn_t a_interrupt(int irq, void *dummy);
 static irqreturn_t b_interrupt(int irq, void *dummy);
 static irqreturn_t x_interrupt(int irq, void *dummy);
