@@ -1,4 +1,3 @@
-#include <time.h>
 #include <linux/kernel.h>
 #include <linux/input.h>
 #include <linux/module.h>
@@ -7,6 +6,7 @@
 #include <linux/gpio.h>
 #include <linux/jiffies.h>
 #include <linux/spi/spi.h>
+#include <linux/delay.h>
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Andrew Fox");
@@ -84,17 +84,6 @@ int left_key_val;
 int right_key_val;
 int down_key_val;
 int up_key_val;
-
-void delay(unsigned int microseconds) {
-    struct timeval tnow, tlong, tend;
-    gettimeofday(&tnow, NULL);
-    tlong.tv_sec = microseconds / 1000000;
-    tlong.tv_usec = microseconds % 1000000;
-    timeradd(&tnow, &tlong, &tend);
-    while (timercmp(&tnow, &tend, <)) {
-        gettimeofday(&tnow, NULL);
-    }
-}
 
 static irqreturn_t left_shoulder_interrupt(int irq, void *dummy) {
     static unsigned long flags;
@@ -244,78 +233,78 @@ static irqreturn_t joystick_spi_interrupt(int irq, void *dummy) {
 
     gpio_set_value(JOYSTICK_CLK_PIN, 0);
     gpio_set_value(JOYSTICK_DI_PIN, 1);
-    delay(2);
+    msleep(2);
     gpio_set_value(JOYSTICK_CLK_PIN, 1);
-    delay(2);
+    msleep(2);
 
     gpio_set_value(JOYSTICK_CLK_PIN, 0);
     gpio_set_value(JOYSTICK_DI_PIN, 1);
-    delay(2);
+    msleep(2);
     gpio_set_value(JOYSTICK_CLK_PIN, 1);
-    delay(2);
+    msleep(2);
 
     gpio_set_value(JOYSTICK_CLK_PIN, 0);
     gpio_set_value(JOYSTICK_DI_PIN, 0); // x
-    delay(2);
+    msleep(2);
     gpio_set_value(JOYSTICK_CLK_PIN, 1);
     gpio_set_value(JOYSTICK_DI_PIN, 1);
-    delay(2);
+    msleep(2);
 
     gpio_set_value(JOYSTICK_CLK_PIN, 0);
     gpio_set_value(JOYSTICK_DI_PIN, 1);
-    delay(2);
+    msleep(2);
 
     for (int i = 0; i < 8; i++) {
         gpio_set_value(JOYSTICK_CLK_PIN, 1);
-        delay(2);
+        msleep(2);
         gpio_set_value(JOYSTICK_CLK_PIN, 0);
-        delay(2);
+        msleep(2);
         x1 = (x1 << 1) | gpio_get_value(JOYSTICK_DO_PIN);
     }
     for (int i = 0; i < 8; i++) {
         x2 = x2 | (gpio_get_value(JOYSTICK_DO_PIN) << i);
         gpio_set_value(JOYSTICK_CLK_PIN, 1);
-        delay(2);
+        msleep(2);
         gpio_set_value(JOYSTICK_CLK_PIN, 0);
-        delay(2);
+        msleep(2);
     }
 
     gpio_set_value(JOYSTICK_CLK_PIN, 0);
     gpio_set_value(JOYSTICK_DI_PIN, 1);
-    delay(2);
+    msleep(2);
     gpio_set_value(JOYSTICK_CLK_PIN, 1);
-    delay(2);
+    msleep(2);
 
     gpio_set_value(JOYSTICK_CLK_PIN, 0);
     gpio_set_value(JOYSTICK_DI_PIN, 1);
-    delay(2);
+    msleep(2);
     gpio_set_value(JOYSTICK_CLK_PIN, 1);
-    delay(2);
+    msleep(2);
 
     gpio_set_value(JOYSTICK_CLK_PIN, 0);
     gpio_set_value(JOYSTICK_DI_PIN, 1); // y
-    delay(2);
+    msleep(2);
     gpio_set_value(JOYSTICK_CLK_PIN, 1);
     gpio_set_value(JOYSTICK_DI_PIN, 1);
-    delay(2);
+    msleep(2);
 
     gpio_set_value(JOYSTICK_CLK_PIN, 0);
     gpio_set_value(JOYSTICK_DI_PIN, 1);
-    delay(2);
+    msleep(2);
 
     for (int i = 0; i < 8; i++) {
         gpio_set_value(JOYSTICK_CLK_PIN, 1);
-        delay(2);
+        msleep(2);
         gpio_set_value(JOYSTICK_CLK_PIN, 0);
-        delay(2);
+        msleep(2);
         y1 = (y1 << 1) | gpio_get_value(JOYSTICK_DO_PIN);
     }
     for (int i = 0; i < 8; i++) {
         y2 = y2 | (gpio_get_value(JOYSTICK_DO_PIN) << i);
         gpio_set_value(JOYSTICK_CLK_PIN, 1);
-        delay(2);
+        msleep(2);
         gpio_set_value(JOYSTICK_CLK_PIN, 0);
-        delay(2);
+        msleep(2);
     }
 
     gpio_set_value(JOYSTICK_CS_PIN, 0); // disable joystick spi device
