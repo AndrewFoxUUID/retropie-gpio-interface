@@ -235,6 +235,9 @@ static irqreturn_t y_interrupt(int irq, void *dummy) {
 static irqreturn_t joystick_spi_interrupt(int irq, void *dummy) {
     static unsigned long flags;
     local_irq_save(flags);
+
+    pr_info("joystick interrupt start");
+
     unsigned char x1, x2, y1, y2;
 
     gpio_set_value(JOYSTICK_CS_PIN, 1); // enable joystick spi device
@@ -317,6 +320,8 @@ static irqreturn_t joystick_spi_interrupt(int irq, void *dummy) {
 
     gpio_set_value(JOYSTICK_CS_PIN, 0); // disable joystick spi device
 
+    pr_info("disabled joystick spi device again");
+
     if (x1 == x2 && y1 == y2) {
         if (x1 < 1) {
             left_key_val++;
@@ -344,6 +349,9 @@ static irqreturn_t joystick_spi_interrupt(int irq, void *dummy) {
         input_report_key(gpio_controller_dev, UP_KEY, up_key_val);
         input_sync(gpio_controller_dev);
     }
+
+    pr_info("joystick interrupt end");
+
     local_irq_restore(flags);
     return IRQ_HANDLED;
 }
@@ -494,6 +502,8 @@ static int __init gpio_controller_driver_init(void) {
                 goto unset_x;
             }
 
+            pr_info("starting joystick pin init");
+
             if (gpio_is_valid(JOYSTICK_CS_PIN) == true) {
                 pin_code[5] = '0' + (JOYSTICK_CS_PIN / 10);
                 pin_code[6] = '0' + (JOYSTICK_CS_PIN % 10);
@@ -542,6 +552,8 @@ static int __init gpio_controller_driver_init(void) {
                 goto unset_joystick_do_pin;
             }
 
+            pr_info("finished joystick pin init");
+
             struct spi_master *master;
             if (master = spi_busnum_to_master(1); master == NULL) {
                 goto unset_y;
@@ -553,9 +565,14 @@ static int __init gpio_controller_driver_init(void) {
             if (spi_setup(joystick_spi_dev)) {
                 goto unset_joystick;
             }
+
+            pr_info("finished joystick device init");
+
             if (request_irq(SPI_IRQ_NUMBER, joystick_spi_interrupt, IRQF_SHARED, "gpio_controller_device", &joystick_spi_irq_cookie) < 0) {
                 goto unset_joystick_irq;
             }
+
+            pr_info("finished joystick irq init");
 
             return 0;
 
