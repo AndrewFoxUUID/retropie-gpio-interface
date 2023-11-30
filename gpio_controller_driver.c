@@ -543,13 +543,13 @@ static int __init gpio_controller_driver_init(void) {
 
             pr_info("finished joystick pin init");
 
-            master = spi_busnum_to_master(1);
+            master = spi_busnum_to_master(SPI_BUS_NUM);
             if (master == NULL) {
-                goto unset_y;
+                goto unset_joystick_di_pin;
             }
             joystick_spi_dev = spi_new_device(master, &joystick_spi_dev_info);
             if (joystick_spi_dev == NULL) {
-                goto unset_y;
+                goto unset_joystick_di_pin;
             }
             joystick_spi_dev->bits_per_word = 8;
             if (spi_setup(joystick_spi_dev)) {
@@ -559,7 +559,8 @@ static int __init gpio_controller_driver_init(void) {
             pr_info("finished joystick device init");
 
             if (request_irq(SPI_IRQ_NUM, joystick_spi_interrupt, IRQF_SHARED, "gpio_controller_device", NULL) < 0) {
-                goto unset_joystick_irq;
+                pr_info("couldn't get irq for joystick spi interrupt");
+                goto unset_joystick;
             }
 
             pr_info("finished joystick irq init");
@@ -568,6 +569,8 @@ static int __init gpio_controller_driver_init(void) {
 
             unset_joystick_irq:
                 free_irq(SPI_IRQ_NUM, joystick_spi_interrupt);
+            unset_joystick:
+                spi_unregister_device(joystick_spi_dev);
             unset_joystick_di_pin:
                 gpio_free(JOYSTICK_DI_PIN);
             unset_joystick_do_pin:
@@ -576,8 +579,6 @@ static int __init gpio_controller_driver_init(void) {
                 gpio_free(JOYSTICK_CLK_PIN);
             unset_joystick_cs_pin:
                 gpio_free(JOYSTICK_CS_PIN);
-            unset_joystick:
-                spi_unregister_device(joystick_spi_dev);
             unset_y:
                 free_irq(y_irq_number, y_interrupt);
             unset_y_pin:
