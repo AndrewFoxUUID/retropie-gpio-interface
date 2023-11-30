@@ -544,15 +544,15 @@ init_fail:
 }
 
 static void __exit gpio_controller_driver_exit(void) {
-    if (joystick_irq_set) {free_irq(SPI_IRQ_NUM, joystick_spi_interrupt);}
-    if (y_irq_set) {free_irq(y_irq_number, y_interrupt);}
-    if (x_irq_set) {free_irq(x_irq_number, x_interrupt);}
-    if (b_irq_set) {free_irq(b_irq_number, b_interrupt);}
-    if (a_irq_set) {free_irq(a_irq_number, a_interrupt);}
-    if (select_irq_set) {free_irq(select_irq_number, select_interrupt);}
-    if (start_irq_set) {free_irq(start_irq_number, start_interrupt);}
-    if (right_shoulder_irq_set) {free_irq(right_shoulder_irq_number, right_shoulder_interrupt);}
-    if (left_shoulder_irq_set) {free_irq(left_shoulder_irq_number, left_shoulder_interrupt);}
+    if (joystick_irq_set) {free_irq(SPI_IRQ_NUM, NULL);}
+    if (y_irq_set) {free_irq(y_irq_number, NULL);}
+    if (x_irq_set) {free_irq(x_irq_number, NULL);}
+    if (b_irq_set) {free_irq(b_irq_number, NULL);}
+    if (a_irq_set) {free_irq(a_irq_number, NULL);}
+    if (select_irq_set) {free_irq(select_irq_number, NULL);}
+    if (start_irq_set) {free_irq(start_irq_number, NULL);}
+    if (right_shoulder_irq_set) {free_irq(right_shoulder_irq_number, NULL);}
+    if (left_shoulder_irq_set) {free_irq(left_shoulder_irq_number, NULL);}
 
     if (joystick_di_pin_requested) {gpio_free(JOYSTICK_DI_PIN);}
     if (joystick_do_pin_requested) {gpio_free(JOYSTICK_DO_PIN);}
