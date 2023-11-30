@@ -86,6 +86,33 @@ int down_key_val = 0;
 int up_key_val = 0;
 int i;
 
+bool input_device_allocated = false;
+bool input_device_registered = false;
+bool spi_device_registered = false;
+
+bool left_shoulder_pin_requested = false;
+bool right_shoulder_pin_requested = false;
+bool start_pin_requested = false;
+bool select_pin_requested = false;
+bool a_pin_requested = false;
+bool b_pin_requested = false;
+bool x_pin_requested = false;
+bool y_pin_requested = false;
+bool joystick_cs_pin_requested = false;
+bool joystick_clk_pin_requested = false;
+bool joystick_do_pin_requested = false;
+bool joystick_di_pin_requested = false;
+
+bool left_shoulder_irq_set = false;
+bool right_shoulder_irq_set = false;
+bool start_irq_set = false;
+bool select_irq_set = false;
+bool a_irq_set = false;
+bool b_irq_set = false;
+bool x_irq_set = false;
+bool y_irq_set = false;
+bool joystick_irq_set = false;
+
 static irqreturn_t left_shoulder_interrupt(int irq, void *dummy) {
     static unsigned long flags;
     local_irq_save(flags);
@@ -348,6 +375,8 @@ static irqreturn_t joystick_spi_interrupt(int irq, void *dummy) {
 static int __init gpio_controller_driver_init(void) {
     gpio_controller_dev = input_allocate_device();
     if (gpio_controller_dev) {
+        input_device_allocated = true;
+
         gpio_controller_dev->name = "gpio_controller_device";
         set_bit(EV_KEY, gpio_controller_dev->evbit);
         set_bit(EV_REP, gpio_controller_dev->evbit);
@@ -362,284 +391,173 @@ static int __init gpio_controller_driver_init(void) {
 
         if (input_register_device(gpio_controller_dev) == 0) {
             char pin_code[8] = "GPIO_XX\0";
+            input_device_registered = true;
 
-            if (gpio_is_valid(LEFT_SHOULDER_PIN) == true) {
-                pin_code[5] = '0' + (LEFT_SHOULDER_PIN / 10);
-                pin_code[6] = '0' + (LEFT_SHOULDER_PIN % 10);
-                if (gpio_request(LEFT_SHOULDER_PIN, pin_code) == 0) {
-                    gpio_direction_input(LEFT_SHOULDER_PIN);
-                    left_shoulder_irq_number = gpio_to_irq(LEFT_SHOULDER_PIN);
-                    if (request_irq(left_shoulder_irq_number, left_shoulder_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {
-                        goto unset_left_shoulder;
-                    }
-                } else {
-                    goto unset_left_shoulder_pin;
-                }
-            } else {
-                goto unregister_dev;
-            }
+            if (gpio_is_valid(LEFT_SHOULDER_PIN) == false) {goto init_fail;}
+            pin_code[5] = '0' + (LEFT_SHOULDER_PIN / 10);
+            pin_code[6] = '0' + (LEFT_SHOULDER_PIN % 10);
+            if (gpio_request(LEFT_SHOULDER_PIN, pin_code) < 0) {goto init_fail;}
+            left_shoulder_pin_requested = true;
+            gpio_direction_input(LEFT_SHOULDER_PIN);
+            left_shoulder_irq_number = gpio_to_irq(LEFT_SHOULDER_PIN);
+            if (request_irq(left_shoulder_irq_number, left_shoulder_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {goto init_fail;}
+            left_shoulder_irq_set = true;
 
-            if (gpio_is_valid(RIGHT_SHOULDER_PIN) == true) {
-                pin_code[5] = '0' + (RIGHT_SHOULDER_PIN / 10);
-                pin_code[6] = '0' + (RIGHT_SHOULDER_PIN % 10);
-                if (gpio_request(RIGHT_SHOULDER_PIN, pin_code) == 0) {
-                    gpio_direction_input(RIGHT_SHOULDER_PIN);
-                    right_shoulder_irq_number = gpio_to_irq(RIGHT_SHOULDER_PIN);
-                    if (request_irq(right_shoulder_irq_number, right_shoulder_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {
-                        goto unset_right_shoulder;
-                    }
-                } else {
-                    goto unset_right_shoulder_pin;
-                }
-            } else {
-                goto unset_left_shoulder;
-            }
+            if (gpio_is_valid(RIGHT_SHOULDER_PIN) == false) {goto init_fail;}
+            pin_code[5] = '0' + (RIGHT_SHOULDER_PIN / 10);
+            pin_code[6] = '0' + (RIGHT_SHOULDER_PIN % 10);
+            if (gpio_request(RIGHT_SHOULDER_PIN, pin_code) < 0) {goto init_fail;}
+            right_shoulder_pin_requested = true;
+            gpio_direction_input(RIGHT_SHOULDER_PIN);
+            right_shoulder_irq_number = gpio_to_irq(RIGHT_SHOULDER_PIN);
+            if (request_irq(right_shoulder_irq_number, right_shoulder_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {goto init_fail;}
+            right_shoulder_irq_set = true;
 
-            if (gpio_is_valid(START_PIN) == true) {
-                pin_code[5] = '0' + (START_PIN / 10);
-                pin_code[6] = '0' + (START_PIN % 10);
-                if (gpio_request(START_PIN, pin_code) == 0) {
-                    gpio_direction_input(START_PIN);
-                    start_irq_number = gpio_to_irq(START_PIN);
-                    if (request_irq(start_irq_number, start_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {
-                        goto unset_start;
-                    }
-                } else {
-                    goto unset_start_pin;
-                }
-            } else {
-                goto unset_right_shoulder;
-            }
+            if (gpio_is_valid(START_PIN) == false) {goto init_fail;}
+            pin_code[5] = '0' + (START_PIN / 10);
+            pin_code[6] = '0' + (START_PIN % 10);
+            if (gpio_request(START_PIN, pin_code) < 0) {goto init_fail;}
+            start_pin_requested = true;
+            gpio_direction_input(START_PIN);
+            start_irq_number = gpio_to_irq(START_PIN);
+            if (request_irq(start_irq_number, start_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {goto init_fail;}
+            start_irq_set = true;
 
-            if (gpio_is_valid(SELECT_PIN) == true) {
-                pin_code[5] = '0' + (SELECT_PIN / 10);
-                pin_code[6] = '0' + (SELECT_PIN % 10);
-                if (gpio_request(SELECT_PIN, pin_code) == 0) {
-                    gpio_direction_input(SELECT_PIN);
-                    select_irq_number = gpio_to_irq(SELECT_PIN);
-                    if (request_irq(select_irq_number, select_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {
-                        goto unset_select;
-                    }
-                } else {
-                    goto unset_select_pin;
-                }
-            } else {
-                goto unset_start;
-            }
+            if (gpio_is_valid(SELECT_PIN) == false) {goto init_fail;}
+            pin_code[5] = '0' + (SELECT_PIN / 10);
+            pin_code[6] = '0' + (SELECT_PIN % 10);
+            if (gpio_request(SELECT_PIN, pin_code) < 0) {goto init_fail;}
+            select_pin_requested = true;
+            gpio_direction_input(SELECT_PIN);
+            select_irq_number = gpio_to_irq(SELECT_PIN);
+            if (request_irq(select_irq_number, select_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {goto init_fail;}
+            select_irq_set = true;
 
-            if (gpio_is_valid(A_PIN) == true) {
-                pin_code[5] = '0' + (A_PIN / 10);
-                pin_code[6] = '0' + (A_PIN % 10);
-                if (gpio_request(A_PIN, pin_code) == 0) {
-                    gpio_direction_input(A_PIN);
-                    a_irq_number = gpio_to_irq(A_PIN);
-                    if (request_irq(a_irq_number, a_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {
-                        goto unset_a;
-                    }
-                } else {
-                    goto unset_a_pin;
-                }
-            } else {
-                goto unset_select;
-            }
+            if (gpio_is_valid(A_PIN) == false) {goto init_fail;}
+            pin_code[5] = '0' + (A_PIN / 10);
+            pin_code[6] = '0' + (A_PIN % 10);
+            if (gpio_request(A_PIN, pin_code) < 0) {goto init_fail;}
+            a_pin_requested = true;
+            gpio_direction_input(A_PIN);
+            a_irq_number = gpio_to_irq(A_PIN);
+            if (request_irq(a_irq_number, a_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {goto init_fail;}
+            a_irq_set = true;
 
-            if (gpio_is_valid(B_PIN) == true) {
-                pin_code[5] = '0' + (B_PIN / 10);
-                pin_code[6] = '0' + (B_PIN % 10);
-                if (gpio_request(B_PIN, pin_code) == 0) {
-                    gpio_direction_input(B_PIN);
-                    b_irq_number = gpio_to_irq(B_PIN);
-                    if (request_irq(b_irq_number, b_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {
-                        goto unset_b;
-                    }
-                } else {
-                    goto unset_b_pin;
-                }
-            } else {
-                goto unset_a;
-            }
+            if (gpio_is_valid(B_PIN) == false) {goto init_fail;}
+            pin_code[5] = '0' + (B_PIN / 10);
+            pin_code[6] = '0' + (B_PIN % 10);
+            if (gpio_request(B_PIN, pin_code) < 0) {goto init_fail;}
+            b_pin_requested = true;
+            gpio_direction_input(B_PIN);
+            b_irq_number = gpio_to_irq(B_PIN);
+            if (request_irq(b_irq_number, b_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {goto init_fail;}
+            b_irq_set = true;
 
-            if (gpio_is_valid(X_PIN) == true) {
-                pin_code[5] = '0' + (X_PIN / 10);
-                pin_code[6] = '0' + (X_PIN % 10);
-                if (gpio_request(X_PIN, pin_code) == 0) {
-                    gpio_direction_input(X_PIN);
-                    x_irq_number = gpio_to_irq(X_PIN);
-                    if (request_irq(x_irq_number, x_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {
-                        goto unset_x;
-                    }
-                } else {
-                    goto unset_x_pin;
-                }
-            } else {
-                goto unset_b;
-            }
+            if (gpio_is_valid(X_PIN) == false) {goto init_fail;}
+            pin_code[5] = '0' + (X_PIN / 10);
+            pin_code[6] = '0' + (X_PIN % 10);
+            if (gpio_request(X_PIN, pin_code) < 0) {goto init_fail;}
+            x_pin_requested = true;
+            gpio_direction_input(X_PIN);
+            x_irq_number = gpio_to_irq(X_PIN);
+            if (request_irq(x_irq_number, x_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {goto init_fail;}
+            x_irq_set = true;
 
-            if (gpio_is_valid(Y_PIN) == true) {
-                pin_code[5] = '0' + (Y_PIN / 10);
-                pin_code[6] = '0' + (Y_PIN % 10);
-                if (gpio_request(Y_PIN, pin_code) == 0) {
-                    gpio_direction_input(Y_PIN);
-                    y_irq_number = gpio_to_irq(Y_PIN);
-                    if (request_irq(y_irq_number, y_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {
-                        goto unset_y;
-                    }
-                } else {
-                    goto unset_y_pin;
-                }
-            } else {
-                goto unset_x;
-            }
+            if (gpio_is_valid(Y_PIN) == false) {goto init_fail;}
+            pin_code[5] = '0' + (Y_PIN / 10);
+            pin_code[6] = '0' + (Y_PIN % 10);
+            if (gpio_request(Y_PIN, pin_code) < 0) {goto init_fail;}
+            y_pin_requested = true;
+            gpio_direction_input(Y_PIN);
+            y_irq_number = gpio_to_irq(Y_PIN);
+            if (request_irq(y_irq_number, y_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {goto init_fail;}
+            y_irq_set = true;
 
             pr_info("starting joystick pin init");
 
-            if (gpio_is_valid(JOYSTICK_CS_PIN) == true) {
-                pin_code[5] = '0' + (JOYSTICK_CS_PIN / 10);
-                pin_code[6] = '0' + (JOYSTICK_CS_PIN % 10);
-                if (gpio_request(JOYSTICK_CS_PIN, pin_code) == 0) {
-                    gpio_direction_output(JOYSTICK_CS_PIN, 1);
-                } else {
-                    goto unset_joystick_cs_pin;
-                }
-            } else {
-                goto unset_y;
-            }
+            if (gpio_is_valid(JOYSTICK_CS_PIN) == false) {goto init_fail;}
+            pin_code[5] = '0' + (JOYSTICK_CS_PIN / 10);
+            pin_code[6] = '0' + (JOYSTICK_CS_PIN % 10);
+            if (gpio_request(JOYSTICK_CS_PIN, pin_code) < 0) {goto init_fail;}
+            joystick_cs_pin_requested = true;
+            gpio_direction_output(JOYSTICK_CS_PIN, 1);
 
-            if (gpio_is_valid(JOYSTICK_CLK_PIN) == true) {
-                pin_code[5] = '0' + (JOYSTICK_CLK_PIN / 10);
-                pin_code[6] = '0' + (JOYSTICK_CLK_PIN % 10);
-                if (gpio_request(JOYSTICK_CLK_PIN, pin_code) == 0) {
-                    gpio_direction_output(JOYSTICK_CLK_PIN, 0);
-                } else {
-                    goto unset_joystick_clk_pin;
-                }
-            } else {
-                goto unset_joystick_cs_pin;
-            }
+            if (gpio_is_valid(JOYSTICK_CLK_PIN) == false) {goto init_fail;}
+            pin_code[5] = '0' + (JOYSTICK_CLK_PIN / 10);
+            pin_code[6] = '0' + (JOYSTICK_CLK_PIN % 10);
+            if (gpio_request(JOYSTICK_CLK_PIN, pin_code) < 0) {goto init_fail;}
+            joystick_clk_pin_requested = true;
+            gpio_direction_output(JOYSTICK_CLK_PIN, 0);
 
-            if (gpio_is_valid(JOYSTICK_DO_PIN) == true) {
-                pin_code[5] = '0' + (JOYSTICK_DO_PIN / 10);
-                pin_code[6] = '0' + (JOYSTICK_DO_PIN % 10);
-                if (gpio_request(JOYSTICK_DO_PIN, pin_code) == 0) {
-                    gpio_direction_input(JOYSTICK_DO_PIN);
-                } else {
-                    goto unset_joystick_do_pin;
-                }
-            } else {
-                goto unset_joystick_clk_pin;
-            }
+            if (gpio_is_valid(JOYSTICK_DO_PIN) == false) {goto init_fail;}
+            pin_code[5] = '0' + (JOYSTICK_DO_PIN / 10);
+            pin_code[6] = '0' + (JOYSTICK_DO_PIN % 10);
+            if (gpio_request(JOYSTICK_DO_PIN, pin_code) < 0) {goto init_fail;}
+            joystick_do_pin_requested = true;
+            gpio_direction_input(JOYSTICK_DO_PIN);
 
-            if (gpio_is_valid(JOYSTICK_DI_PIN) == true) {
-                pin_code[5] = '0' + (JOYSTICK_DI_PIN / 10);
-                pin_code[6] = '0' + (JOYSTICK_DI_PIN % 10);
-                if (gpio_request(JOYSTICK_DI_PIN, pin_code) == 0) {
-                    gpio_direction_output(JOYSTICK_DI_PIN, 0);
-                } else {
-                    goto unset_joystick_di_pin;
-                }
-            } else {
-                goto unset_joystick_do_pin;
-            }
+            if (gpio_is_valid(JOYSTICK_DI_PIN) == false) {goto init_fail;}
+            pin_code[5] = '0' + (JOYSTICK_DI_PIN / 10);
+            pin_code[6] = '0' + (JOYSTICK_DI_PIN % 10);
+            if (gpio_request(JOYSTICK_DI_PIN, pin_code) < 0) {goto init_fail;}
+            joystick_di_pin_requested = true;
+            gpio_direction_output(JOYSTICK_DI_PIN, 0);
 
             pr_info("finished joystick pin init");
 
             master = spi_busnum_to_master(SPI_BUS_NUM);
-            if (master == NULL) {
-                goto unset_joystick_di_pin;
-            }
+            if (master == NULL) {goto init_fail;}
             joystick_spi_dev = spi_new_device(master, &joystick_spi_dev_info);
-            if (joystick_spi_dev == NULL) {
-                goto unset_joystick_di_pin;
-            }
+            if (joystick_spi_dev == NULL) {goto init_fail;}
+            spi_device_registered = true;
             joystick_spi_dev->bits_per_word = 8;
-            if (spi_setup(joystick_spi_dev)) {
-                goto unset_joystick;
-            }
+            if (spi_setup(joystick_spi_dev)) {goto init_fail;}
 
             pr_info("finished joystick device init");
 
             if (request_irq(SPI_IRQ_NUM, joystick_spi_interrupt, IRQF_SHARED, "gpio_controller_device", NULL) < 0) {
                 pr_info("couldn't get irq for joystick spi interrupt");
-                goto unset_joystick;
+                goto init_fail;
             }
+            joystick_irq_set = true;
 
             pr_info("finished joystick irq init");
 
             return 0;
-
-            unset_joystick_irq:
-                free_irq(SPI_IRQ_NUM, joystick_spi_interrupt);
-            unset_joystick:
-                spi_unregister_device(joystick_spi_dev);
-            unset_joystick_di_pin:
-                gpio_free(JOYSTICK_DI_PIN);
-            unset_joystick_do_pin:
-                gpio_free(JOYSTICK_DO_PIN);
-            unset_joystick_clk_pin:
-                gpio_free(JOYSTICK_CLK_PIN);
-            unset_joystick_cs_pin:
-                gpio_free(JOYSTICK_CS_PIN);
-            unset_y:
-                free_irq(y_irq_number, y_interrupt);
-            unset_y_pin:
-                gpio_free(Y_PIN);
-            unset_x:
-                free_irq(x_irq_number, x_interrupt);
-            unset_x_pin:
-                gpio_free(X_PIN);
-            unset_b:
-                free_irq(b_irq_number, b_interrupt);
-            unset_b_pin:
-                gpio_free(B_PIN);
-            unset_a:
-                free_irq(a_irq_number, a_interrupt);
-            unset_a_pin:
-                gpio_free(A_PIN);
-            unset_select:
-                free_irq(select_irq_number, select_interrupt);
-            unset_select_pin:
-                gpio_free(SELECT_PIN);
-            unset_start:
-                free_irq(start_irq_number, start_interrupt);
-            unset_start_pin:
-                gpio_free(START_PIN);
-            unset_right_shoulder:
-                free_irq(right_shoulder_irq_number, right_shoulder_interrupt);
-            unset_right_shoulder_pin:
-                gpio_free(RIGHT_SHOULDER_PIN);
-            unset_left_shoulder:
-                free_irq(left_shoulder_irq_number, left_shoulder_interrupt);
-            unset_left_shoulder_pin:
-                gpio_free(LEFT_SHOULDER_PIN);
-            unregister_dev:
-                input_unregister_device(gpio_controller_dev);
-        } else {
-            input_free_device(gpio_controller_dev);
         }
     }
+init_fail:
+    gpio_controller_driver_exit();
     return -1;
 }
 
-static void __exit gpio_controller_driver_exit(void) { // note: this doesn't work?
-    free_irq(SPI_IRQ_NUM, joystick_spi_interrupt);
-    spi_unregister_device(joystick_spi_dev);
-    free_irq(left_shoulder_irq_number, left_shoulder_interrupt);
-    free_irq(right_shoulder_irq_number, right_shoulder_interrupt);
-    free_irq(start_irq_number, start_interrupt);
-    free_irq(select_irq_number, select_interrupt);
-    free_irq(a_irq_number, a_interrupt);
-    free_irq(b_irq_number, b_interrupt);
-    free_irq(x_irq_number, x_interrupt);
-    free_irq(y_irq_number, y_interrupt);
-    gpio_free(LEFT_SHOULDER_PIN);
-    gpio_free(RIGHT_SHOULDER_PIN);
-    gpio_free(START_PIN);
-    gpio_free(SELECT_PIN);
-    gpio_free(A_PIN);
-    gpio_free(B_PIN);
-    gpio_free(X_PIN);
-    gpio_free(Y_PIN);
-    input_unregister_device(gpio_controller_dev);
+static void __exit gpio_controller_driver_exit(void) {
+    if (joystick_irq_set) {free_irq(SPI_IRQ_NUM, joystick_spi_interrupt);}
+    if (y_irq_set) {free_irq(y_irq_number, y_interrupt);}
+    if (x_irq_set) {free_irq(x_irq_number, x_interrupt);}
+    if (b_irq_set) {free_irq(b_irq_number, b_interrupt);}
+    if (a_irq_set) {free_irq(a_irq_number, a_interrupt);}
+    if (select_irq_set) {free_irq(select_irq_number, select_interrupt);}
+    if (start_irq_set) {free_irq(start_irq_number, start_interrupt);}
+    if (right_shoulder_irq_set) {free_irq(right_shoulder_irq_number, right_shoulder_interrupt);}
+    if (left_shoulder_irq_set) {free_irq(left_shoulder_irq_number, left_shoulder_interrupt);}
+
+    if (joystick_di_pin_requested) {gpio_free(JOYSTICK_DI_PIN);}
+    if (joystick_do_pin_requested) {gpio_free(JOYSTICK_DO_PIN);}
+    if (joystick_clk_pin_requested) {gpio_free(JOYSTICK_CLK_PIN);}
+    if (joystick_cs_pin_requested) {gpio_free(JOYSTICK_CS_PIN);}
+    if (y_pin_requested) {gpio_free(Y_PIN);}
+    if (x_pin_requested) {gpio_free(X_PIN);}
+    if (b_pin_requested) {gpio_free(B_PIN);}
+    if (a_pin_requested) {gpio_free(A_PIN);}
+    if (select_pin_requested) {gpio_free(SELECT_PIN);}
+    if (start_pin_requested) {gpio_free(START_PIN);}
+    if (right_shoulder_pin_requested) {gpio_free(RIGHT_SHOULDER_PIN);}
+    if (left_shoulder_pin_requested) {gpio_free(LEFT_SHOULDER_PIN);}
+
+    if (spi_device_registered) {spi_unregister_device(joystick_spi_dev);}
+    if (input_device_registered) {input_unregister_device(gpio_controller_dev);}
+    if (input_device_allocated) {input_free_device(gpio_controller_dev);}
 }
 
 module_init(gpio_controller_driver_init);
