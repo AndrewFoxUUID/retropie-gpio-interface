@@ -266,7 +266,7 @@ static irqreturn_t joystick_spi_interrupt(int irq, void *dummy) {
     unsigned char x1, x2, y1, y2;
     local_irq_save(flags);
 
-    pr_info("joystick interrupt start");
+    pr_info("joystick interrupt start\n");
 
     gpio_set_value(JOYSTICK_CS_PIN, 1); // enable joystick spi device
 
@@ -348,7 +348,7 @@ static irqreturn_t joystick_spi_interrupt(int irq, void *dummy) {
 
     gpio_set_value(JOYSTICK_CS_PIN, 0); // disable joystick spi device
 
-    pr_info("disabled joystick spi device again");
+    pr_info("disabled joystick spi device again\n");
 
     if (x1 == x2 && y1 == y2) {
         if (x1 < 1) {
@@ -378,7 +378,7 @@ static irqreturn_t joystick_spi_interrupt(int irq, void *dummy) {
         input_sync(gpio_controller_dev);
     }
 
-    pr_info("joystick interrupt end");
+    pr_info("joystick interrupt end\n");
 
     local_irq_restore(flags);
     return IRQ_HANDLED;
@@ -517,7 +517,7 @@ static int __init gpio_controller_driver_init(void) {
             if (request_irq(y_irq_number, y_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {goto init_fail;}
             y_irq_set = true;
 
-            pr_info("starting joystick pin init");
+            pr_info("starting joystick pin init\n");
 
             if (gpio_is_valid(JOYSTICK_CS_PIN) == false) {goto init_fail;}
             pin_code[5] = '0' + (JOYSTICK_CS_PIN / 10);
@@ -547,25 +547,31 @@ static int __init gpio_controller_driver_init(void) {
             joystick_di_pin_requested = true;
             gpio_direction_output(JOYSTICK_DI_PIN, 0);
 
-            pr_info("finished joystick pin init");
+            pr_info("finished joystick pin init\n");
 
             master = spi_busnum_to_master(SPI_BUS_NUM);
             if (master == NULL) {goto init_fail;}
+
+            pr_info("got master\n");
+
             joystick_spi_dev = spi_new_device(master, &joystick_spi_dev_info);
             if (joystick_spi_dev == NULL) {goto init_fail;}
             spi_device_registered = true;
+
+            pr_info("registered spi device\n");
+
             joystick_spi_dev->bits_per_word = 8;
             if (spi_setup(joystick_spi_dev)) {goto init_fail;}
 
-            pr_info("finished joystick device init");
+            pr_info("finished joystick device init\n");
 
             if (request_irq(SPI_IRQ_NUM, joystick_spi_interrupt, IRQF_SHARED, "gpio_controller_device", NULL) < 0) {
-                pr_info("couldn't get irq for joystick spi interrupt");
+                pr_info("couldn't get irq for joystick spi interrupt\n");
                 goto init_fail;
             }
             joystick_irq_set = true;
 
-            pr_info("finished joystick irq init");
+            pr_info("finished joystick irq init\n");
 
             return 0;
         }
