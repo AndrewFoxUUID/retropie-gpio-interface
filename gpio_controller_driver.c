@@ -70,6 +70,7 @@ int a_val = 0;
 int b_val = 0;
 int x_val = 0;
 int y_val = 0;
+struct spi_master *master;
 static struct spi_device *joystick_spi_dev;
 struct spi_board_info joystick_spi_dev_info = {
     .modalias = "joystick-spi-adc0832-driver",
@@ -519,7 +520,7 @@ static int __init gpio_controller_driver_init(void) {
             if (gpio_is_valid(JOYSTICK_DO_PIN) == true) {
                 pin_code[5] = '0' + (JOYSTICK_DO_PIN / 10);
                 pin_code[6] = '0' + (JOYSTICK_DO_PIN % 10);
-                if (gpio_requeset(JOYSTICK_DO_PIN, pin_code) == 0) {
+                if (gpio_request(JOYSTICK_DO_PIN, pin_code) == 0) {
                     gpio_direction_input(JOYSTICK_DO_PIN);
                 } else {
                     goto unset_joystick_do_pin;
@@ -542,7 +543,6 @@ static int __init gpio_controller_driver_init(void) {
 
             pr_info("finished joystick pin init");
 
-            struct spi_master *master;
             master = spi_busnum_to_master(1);
             if (master == NULL) {
                 goto unset_y;
