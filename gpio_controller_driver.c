@@ -543,10 +543,12 @@ static int __init gpio_controller_driver_init(void) {
             pr_info("finished joystick pin init");
 
             struct spi_master *master;
-            if (master = spi_busnum_to_master(1); master == NULL) {
+            master = spi_busnum_to_master(1);
+            if (master == NULL) {
                 goto unset_y;
             }
-            if (joystick_spi_dev = spi_new_device(master, &joystick_spi_dev_info); joystick_spi_dev == NULL) {
+            joystick_spi_dev = spi_new_device(master, &joystick_spi_dev_info);
+            if (joystick_spi_dev == NULL) {
                 goto unset_y;
             }
             joystick_spi_dev->bits_per_word = 8;
