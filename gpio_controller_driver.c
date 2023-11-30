@@ -45,6 +45,18 @@ MODULE_VERSION("0.3");
 
 extern unsigned long volatile jiffies;
 
+static irqreturn_t left_shoulder_interrupt(int irq, void *dummy)
+static irqreturn_t right_shoulder_interrupt(int irq, void *dummy)
+static irqreturn_t start_interrupt(int irq, void *dummy)
+static irqreturn_t select_interrupt(int irq, void *dummy)
+static irqreturn_t a_interrupt(int irq, void *dummy);
+static irqreturn_t b_interrupt(int irq, void *dummy);
+static irqreturn_t x_interrupt(int irq, void *dummy);
+static irqreturn_t y_interrupt(int irq, void *dummy);
+static irqreturn_t joystick_spi_interrupt(int irq, void *dummy);
+static int __init gpio_controller_driver_init(void);
+static void __exit gpio_controller_driver_exit(void);
+
 static struct input_dev *gpio_controller_dev;
 unsigned int left_shoulder_irq_number;
 unsigned int right_shoulder_irq_number;
