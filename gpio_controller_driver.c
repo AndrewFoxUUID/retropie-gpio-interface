@@ -1,3 +1,4 @@
+#include <time.h>
 #include <linux/kernel.h>
 #include <linux/input.h>
 #include <linux/module.h>
@@ -5,11 +6,12 @@
 #include <linux/interrupt.h>
 #include <linux/gpio.h>
 #include <linux/jiffies.h>
+#include <linux/spi/spi.h>
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Andrew Fox");
 MODULE_DESCRIPTION("A driver for a GPIO based custom RetroPie controller");
-MODULE_VERSION("0.2");
+MODULE_VERSION("0.3");
 
 #define LEFT_SHOULDER_PIN   4
 #define RIGHT_SHOULDER_PIN  17
@@ -19,9 +21,12 @@ MODULE_VERSION("0.2");
 #define B_PIN               25
 #define X_PIN               24
 #define Y_PIN               23
-#define VRX_PIN             6
-#define VRY_PIN             13
-#define SW_PIN              5
+#define JOYSTICK_CS_PIN     18
+#define JOYSTICK_DO_PIN     19
+#define JOYSTICK_DI_PIN     20
+#define JOYSTICK_CLK_PIN    21
+#define SPI_BUS_NUM         1
+#define SPI_IRQ_NUM         84 // ???
 
 #define LEFT_SHOULDER_KEY   KEY_GRAVE
 #define RIGHT_SHOULDER_KEY  KEY_1
@@ -36,7 +41,7 @@ MODULE_VERSION("0.2");
 #define LEFT_KEY            KEY_LEFT
 #define RIGHT_KEY           KEY_RIGHT
 
-#define DEBOUNCE_TIME       1
+#define DEBOUNCE_TIME       2
 
 extern unsigned long volatile jiffies;
 
@@ -65,6 +70,31 @@ int a_val = 0;
 int b_val = 0;
 int x_val = 0;
 int y_val = 0;
+static struct spi_device *joystick_spi_dev;
+struct spi_board_info joystick_spi_dev_info = {
+    .modalias = "joystick-spi-adc0832-driver",
+    .irq = SPI_IRQ_NUMBER,
+    .max_speed_hz = 400000,
+    .bus_num = SPI_BUS_NUM,
+    .chip_select = 0,
+    .mode = SPI_MODE_1
+}
+static unsigned int joystick_spi_irq_cookie;
+int left_key_val;
+int right_key_val;
+int down_key_val;
+int up_key_val;
+
+void delay(unsigned int microseconds) {
+    struct timeval tnow, tlong, tend;
+    gettimeofday(&tnow, NULL);
+    tlong.tv_sec = microseconds / 1000000;
+    tlong.tv_usec = microseconds % 1000000;
+    timeradd(&tnow, &tlong, &tend);
+    while (timercmp(&tnow, &tend, <)) {
+        gettimeofday(&tnow, NULL);
+    }
+}
 
 static irqreturn_t left_shoulder_interrupt(int irq, void *dummy) {
     static unsigned long flags;
@@ -202,6 +232,122 @@ static irqreturn_t y_interrupt(int irq, void *dummy) {
     return IRQ_HANDLED;
 }
 
+static irqreturn_t joystick_spi_interrupt(int irq, void *dummy) {
+    static unsigned long flags;
+    local_irq_save(flags);
+    unsigned char x1, x2, y1, y2;
+
+    gpio_set_value(JOYSTICK_CS_PIN, 1); // enable joystick spi device
+
+    gpio_set_value(JOYSTICK_CLK_PIN, 0);
+    gpio_set_value(JOYSTICK_DI_PIN, 1);
+    delay(2);
+    gpio_set_value(JOYSTICK_CLK_PIN, 1);
+    delay(2);
+
+    gpio_set_value(JOYSTICK_CLK_PIN, 0);
+    gpio_set_value(JOYSTICK_DI_PIN, 1);
+    delay(2);
+    gpio_set_value(JOYSTICK_CLK_PIN, 1);
+    delay(2);
+
+    gpio_set_value(JOYSTICK_CLK_PIN, 0);
+    gpio_set_value(JOYSTICK_DI_PIN, 0); // x
+    delay(2);
+    gpio_set_value(JOYSTICK_CLK_PIN, 1);
+    gpio_set_value(JOYSTICK_DI_PIN, 1);
+    delay(2);
+
+    gpio_set_value(JOYSTICK_CLK_PIN, 0);
+    gpio_set_value(JOYSTICK_DI_PIN, 1);
+    delay(2);
+
+    for (int i = 0; i < 8; i++) {
+        gpio_set_value(JOYSTICK_CLK_PIN, 1);
+        delay(2);
+        gpio_set_value(JOYSTICK_CLK_PIN, 0);
+        delay(2);
+        x1 = (x1 << 1) | gpio_get_value(JOYSTICK_DO_PIN);
+    }
+    for (int i = 0; i < 8; i++) {
+        x2 = x2 | (gpio_get_value(JOYSTICK_DO_PIN) << i);
+        gpio_set_value(JOYSTICK_CLK_PIN, 1);
+        delay(2);
+        gpio_set_value(JOYSTICK_CLK_PIN, 0);
+        delay(2);
+    }
+
+    gpio_set_value(JOYSTICK_CLK_PIN, 0);
+    gpio_set_value(JOYSTICK_DI_PIN, 1);
+    delay(2);
+    gpio_set_value(JOYSTICK_CLK_PIN, 1);
+    delay(2);
+
+    gpio_set_value(JOYSTICK_CLK_PIN, 0);
+    gpio_set_value(JOYSTICK_DI_PIN, 1);
+    delay(2);
+    gpio_set_value(JOYSTICK_CLK_PIN, 1);
+    delay(2);
+
+    gpio_set_value(JOYSTICK_CLK_PIN, 0);
+    gpio_set_value(JOYSTICK_DI_PIN, 1); // y
+    delay(2);
+    gpio_set_value(JOYSTICK_CLK_PIN, 1);
+    gpio_set_value(JOYSTICK_DI_PIN, 1);
+    delay(2);
+
+    gpio_set_value(JOYSTICK_CLK_PIN, 0);
+    gpio_set_value(JOYSTICK_DI_PIN, 1);
+    delay(2);
+
+    for (int i = 0; i < 8; i++) {
+        gpio_set_value(JOYSTICK_CLK_PIN, 1);
+        delay(2);
+        gpio_set_value(JOYSTICK_CLK_PIN, 0);
+        delay(2);
+        y1 = (y1 << 1) | gpio_get_value(JOYSTICK_DO_PIN);
+    }
+    for (int i = 0; i < 8; i++) {
+        y2 = y2 | (gpio_get_value(JOYSTICK_DO_PIN) << i);
+        gpio_set_value(JOYSTICK_CLK_PIN, 1);
+        delay(2);
+        gpio_set_value(JOYSTICK_CLK_PIN, 0);
+        delay(2);
+    }
+
+    gpio_set_value(JOYSTICK_CS_PIN, 0); // disable joystick spi device
+
+    if (x1 == x2 && y1 == y2) {
+        if (x1 < 1) {
+            left_key_val++;
+        } else {
+            left_key_val = 0;
+        }
+        if (x1 > 254) {
+            right_key_val++;
+        } else {
+            right_key_val = 0;
+        }
+        if (y1 < 1) {
+            down_key_val++;
+        } else {
+            down_key_val = 0;
+        }
+        if (y1 > 254) {
+            up_key_val++;
+        } else {
+            up_key_val = 0;
+        }
+        input_report_key(gpio_controller_dev, LEFT_KEY, left_key_val);
+        input_report_key(gpio_controller_dev, RIGHT_KEY, right_key_val);
+        input_report_key(gpio_controller_dev, DOWN_KEY, down_key_val);
+        input_report_key(gpio_controller_dev, UP_KEY, up_key_val);
+        input_sync(gpio_controller_dev);
+    }
+    local_irq_restore(flags);
+    return IRQ_HANDLED;
+}
+
 static int __init gpio_controller_driver_init(void) {
     gpio_controller_dev = input_allocate_device();
     if (gpio_controller_dev) {
@@ -229,6 +375,8 @@ static int __init gpio_controller_driver_init(void) {
                     if (request_irq(left_shoulder_irq_number, left_shoulder_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {
                         goto unset_left_shoulder;
                     }
+                } else {
+                    goto unset_left_shoulder_pin;
                 }
             } else {
                 goto unregister_dev;
@@ -243,6 +391,8 @@ static int __init gpio_controller_driver_init(void) {
                     if (request_irq(right_shoulder_irq_number, right_shoulder_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {
                         goto unset_right_shoulder;
                     }
+                } else {
+                    goto unset_right_shoulder_pin;
                 }
             } else {
                 goto unset_left_shoulder;
@@ -257,6 +407,8 @@ static int __init gpio_controller_driver_init(void) {
                     if (request_irq(start_irq_number, start_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {
                         goto unset_start;
                     }
+                } else {
+                    goto unset_start_pin;
                 }
             } else {
                 goto unset_right_shoulder;
@@ -271,6 +423,8 @@ static int __init gpio_controller_driver_init(void) {
                     if (request_irq(select_irq_number, select_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {
                         goto unset_select;
                     }
+                } else {
+                    goto unset_select_pin;
                 }
             } else {
                 goto unset_start;
@@ -285,6 +439,8 @@ static int __init gpio_controller_driver_init(void) {
                     if (request_irq(a_irq_number, a_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {
                         goto unset_a;
                     }
+                } else {
+                    goto unset_a_pin;
                 }
             } else {
                 goto unset_select;
@@ -299,6 +455,8 @@ static int __init gpio_controller_driver_init(void) {
                     if (request_irq(b_irq_number, b_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {
                         goto unset_b;
                     }
+                } else {
+                    goto unset_b_pin;
                 }
             } else {
                 goto unset_a;
@@ -313,6 +471,8 @@ static int __init gpio_controller_driver_init(void) {
                     if (request_irq(x_irq_number, x_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {
                         goto unset_x;
                     }
+                } else {
+                    goto unset_x_pin;
                 }
             } else {
                 goto unset_b;
@@ -327,44 +487,122 @@ static int __init gpio_controller_driver_init(void) {
                     if (request_irq(y_irq_number, y_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {
                         goto unset_y;
                     }
+                } else {
+                    goto unset_y_pin;
                 }
             } else {
                 goto unset_x;
             }
 
-            if (gpio_is_valid(VRX_PIN) == true && gpio_is_valid(VRY_PIN) == true) {
-                pin_code[5] = '0' + (VRX_PIN / 10);
-                pin_code[6] = '0' + (VRX_PIN % 10);
-                if (gpio_request(VRX_PIN, pin_code) == 0) {
-                    gpio_direction_input(VRX_PIN);
-                    gpio_export(VRX_PIN, 0);
+            if (gpio_is_valid(JOYSTICK_CS_PIN) == true) {
+                pin_code[5] = '0' + (JOYSTICK_CS_PIN / 10);
+                pin_code[6] = '0' + (JOYSTICK_CS_PIN % 10);
+                if (gpio_request(JOYSTICK_CS_PIN, pin_code) == 0) {
+                    gpio_direction_output(JOYSTICK_CS_PIN, 1);
+                } else {
+                    goto unset_joystick_cs_pin;
                 }
-                pin_code[5] = '0' + (VRY_PIN / 10);
-                pin_code[6] = '0' + (VRY_PIN % 10);
-                if (gpio_request(VRY_PIN, pin_code) == 0) {
-                    gpio_direction_input(VRY_PIN);
-                    gpio_export(VRY_PIN, 0);
+            } else {
+                goto unset_y;
+            }
+
+            if (gpio_is_valid(JOYSTICK_CLK_PIN) == true) {
+                pin_code[5] = '0' + (JOYSTICK_CLK_PIN / 10);
+                pin_code[6] = '0' + (JOYSTICK_CLK_PIN % 10);
+                if (gpio_request(JOYSTICK_CLK_PIN, pin_code) == 0) {
+                    gpio_direction_output(JOYSTICK_CLK_PIN, 0);
+                } else {
+                    goto unset_joystick_clk_pin;
                 }
+            } else {
+                goto unset_joystick_cs_pin;
+            }
+
+            if (gpio_is_valid(JOYSTICK_DO_PIN) == true) {
+                pin_code[5] = '0' + (JOYSTICK_DO_PIN / 10);
+                pin_code[6] = '0' + (JOYSTICK_DO_PIN % 10);
+                if (gpio_requeset(JOYSTICK_DO_PIN, pin_code) == 0) {
+                    gpio_direction_input(JOYSTICK_DO_PIN);
+                } else {
+                    goto unset_joystick_do_pin;
+                }
+            } else {
+                goto unset_joystick_clk_pin;
+            }
+
+            if (gpio_is_valid(JOYSTICK_DI_PIN) == true) {
+                pin_code[5] = '0' + (JOYSTICK_DI_PIN / 10);
+                pin_code[6] = '0' + (JOYSTICK_DI_PIN % 10);
+                if (gpio_request(JOYSTICK_DI_PIN, pin_code) == 0) {
+                    gpio_direction_output(JOYSTICK_DI_PIN, 0);
+                } else {
+                    goto unset_joystick_di_pin;
+                }
+            } else {
+                goto unset_joystick_do_pin;
+            }
+
+            struct spi_master *master;
+            if (master = spi_busnum_to_master(1); master == NULL) {
+                goto unset_y;
+            }
+            if (joystick_spi_dev = spi_new_device(master, &joystick_spi_dev_info); joystick_spi_dev == NULL) {
+                goto unset_y;
+            }
+            joystick_spi_dev->bits_per_word = 8;
+            if (spi_setup(joystick_spi_dev)) {
+                goto unset_joystick;
+            }
+            if (request_irq(SPI_IRQ_NUMBER, joystick_spi_interrupt, IRQF_SHARED, "gpio_controller_device", &joystick_spi_irq_cookie) < 0) {
+                goto unset_joystick_irq;
             }
 
             return 0;
 
+            unset_joystick_irq:
+                free_irq(SPI_IRQ_NUMBER, &joystick_spi_irq_cookie);
+            unset_joystick_di_pin:
+                gpio_free(JOYSTICK_DI_PIN);
+            unset_joystick_do_pin:
+                gpio_free(JOYSTICK_DO_PIN);
+            unset_joystick_clk_pin:
+                gpio_free(JOYSTICK_CLK_PIN);
+            unset_joystick_cs_pin:
+                gpio_free(JOYSTICK_CS_PIN);
+            unset_joystick:
+                spi_unregister_device(joystick_spi_dev);
             unset_y:
                 free_irq(y_irq_number, y_interrupt);
+            unset_y_pin:
+                gpio_free(Y_PIN);
             unset_x:
                 free_irq(x_irq_number, x_interrupt);
+            unset_x_pinL
+                gpio_free(X_PIN);
             unset_b:
                 free_irq(b_irq_number, b_interrupt);
+            unset_b_pin:
+                gpio_free(B_PIN);
             unset_a:
                 free_irq(a_irq_number, a_interrupt);
+            unset_a_pin:
+                gpio_free(A_PIN);
             unset_select:
                 free_irq(select_irq_number, select_interrupt);
+            unset_select_pin:
+                gpio_free(SELECT_PIN);
             unset_start:
                 free_irq(start_irq_number, start_interrupt);
+            unset_start_pin:
+                gpio_free(START_PIN);
             unset_right_shoulder:
                 free_irq(right_shoulder_irq_number, right_shoulder_interrupt);
+            unset_right_shoulder_pin:
+                gpio_free(RIGHT_SHOULDER_PIN);
             unset_left_shoulder:
                 free_irq(left_shoulder_irq_number, left_shoulder_interrupt);
+            unset_left_shoulder_pin:
+                gpio_free(LEFT_SHOULDER_PIN);
             unregister_dev:
                 input_unregister_device(gpio_controller_dev);
         } else {
@@ -375,6 +613,8 @@ static int __init gpio_controller_driver_init(void) {
 }
 
 static void __exit gpio_controller_driver_exit(void) { // note: this doesn't work?
+    free_irq(SPI_IRQ_NUMBER, &joystick_spi_irq_cookie);
+    spi_unregister_device(joystick_spi_dev);
     free_irq(left_shoulder_irq_number, left_shoulder_interrupt);
     free_irq(right_shoulder_irq_number, right_shoulder_interrupt);
     free_irq(start_irq_number, start_interrupt);
