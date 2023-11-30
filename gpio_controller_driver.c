@@ -583,7 +583,7 @@ static int __init gpio_controller_driver_init(void) {
                 gpio_free(Y_PIN);
             unset_x:
                 free_irq(x_irq_number, x_interrupt);
-            unset_x_pinL
+            unset_x_pin:
                 gpio_free(X_PIN);
             unset_b:
                 free_irq(b_irq_number, b_interrupt);
@@ -619,7 +619,7 @@ static int __init gpio_controller_driver_init(void) {
 }
 
 static void __exit gpio_controller_driver_exit(void) { // note: this doesn't work?
-    free_irq(SPI_IRQ_NUMBER, &joystick_spi_irq_cookie);
+    free_irq(SPI_IRQ_NUMBER, joystick_spi_interrupt);
     spi_unregister_device(joystick_spi_dev);
     free_irq(left_shoulder_irq_number, left_shoulder_interrupt);
     free_irq(right_shoulder_irq_number, right_shoulder_interrupt);
