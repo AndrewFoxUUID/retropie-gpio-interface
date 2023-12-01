@@ -1,13 +1,17 @@
 obj-m += gpio_controller_driver.o
+obj-m += input-polldev.o
 KDIR = /lib/modules/$(shell uname -r)/build
 all:
 	make -C $(KDIR)  M=$(shell pwd) modules
 clean:
 	make -C $(KDIR)  M=$(shell pwd) clean
 install:
+	insmod input-polldev.ko
 	insmod gpio_controller_driver.ko
 reinstall:
 	rmmod gpio_controller_driver
+	rmmod input-polldev
+	insmod input-polldev.ko
 	insmod gpio_controller_driver.ko
 get_spidev_tester:
 	wget https://raw.githubusercontent.com/raspberrypi/linux/rpi-6.1.y/tools/spi/spidev_test.c
