@@ -406,7 +406,7 @@ static void unallocate_all(void) {
 }
 
 static int __init gpio_controller_driver_init(void) {
-    controller_buttons_dev = input_allocate_device();
+    /*controller_buttons_dev = input_allocate_device();
     if (controller_buttons_dev) {
         buttons_device_allocated = true;
 
@@ -508,7 +508,7 @@ static int __init gpio_controller_driver_init(void) {
             gpio_direction_input(Y_PIN);
             y_irq_number = gpio_to_irq(Y_PIN);
             if (request_irq(y_irq_number, y_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "controller_buttons_device", NULL) < 0) {goto init_fail;}
-            y_irq_set = true;
+            y_irq_set = true;*/
 
             pr_info("starting joystick pin init\n");
 
@@ -557,15 +557,33 @@ static int __init gpio_controller_driver_init(void) {
             pr_info("allocated input poll device\n");
 
             controller_joystick_dev->poll = joystick_spi_poll;
-            controller_joystick_dev->input = controller_buttons_dev;
+
+            //controller_joystick_dev->input = controller_buttons_dev;
+            controller_buttons_dev = controller_joystick_dev->input;
+            controller_buttons_dev->name = "controller_buttons_device";
+            set_bit(EV_KEY, controller_buttons_dev->evbit);
+            set_bit(EV_REP, controller_buttons_dev->evbit);
+            set_bit(LEFT_SHOULDER_KEY, controller_buttons_dev->keybit);
+            set_bit(RIGHT_SHOULDER_KEY, controller_buttons_dev->keybit);
+            set_bit(START_KEY, controller_buttons_dev->keybit);
+            set_bit(SELECT_KEY, controller_buttons_dev->keybit);
+            set_bit(A_KEY, controller_buttons_dev->keybit);
+            set_bit(B_KEY, controller_buttons_dev->keybit);
+            set_bit(X_KEY, controller_buttons_dev->keybit);
+            set_bit(Y_KEY, controller_buttons_dev->keybit);
+            set_bit(LEFT_KEY, controller_buttons_dev->keybit);
+            set_bit(RIGHT_KEY, controller_buttons_dev->keybit);
+            set_bit(DOWN_KEY, controller_buttons_dev->keybit);
+            set_bit(UP_KEY, controller_buttons_dev->keybit);
+
             if (input_register_polled_device(controller_joystick_dev) < 0) {goto init_fail;}
             joystick_device_registered = true;
 
             pr_info("finished joystick input device init\n");
 
             return 0;
-        }
-    }
+        /*}
+    }*/
 init_fail:
     unallocate_all();
     return -1;
