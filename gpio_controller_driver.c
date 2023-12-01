@@ -1,5 +1,5 @@
 #include <linux/kernel.h>
-#include <linux/input.h>
+#include <linux/input-polldev.h>
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/interrupt.h>
@@ -12,7 +12,7 @@
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Andrew Fox");
 MODULE_DESCRIPTION("A driver for a GPIO based custom RetroPie controller");
-MODULE_VERSION("0.3");
+MODULE_VERSION("0.4");
 
 #define LEFT_SHOULDER_PIN   4
 #define RIGHT_SHOULDER_PIN  17
@@ -54,10 +54,10 @@ static irqreturn_t b_interrupt(int irq, void *dummy);
 static irqreturn_t x_interrupt(int irq, void *dummy);
 static irqreturn_t y_interrupt(int irq, void *dummy);
 static irqreturn_t joystick_spi_interrupt(int irq, void *dummy);
-static int __init gpio_controller_driver_init(void);
-static void __exit gpio_controller_driver_exit(void);
+static int __init controller_buttons_driver_init(void);
+static void __exit controller_buttons_driver_exit(void);
 
-static struct input_dev *gpio_controller_dev;
+static struct input_dev *controller_buttons_dev;
 unsigned int left_shoulder_irq_number;
 unsigned int right_shoulder_irq_number;
 unsigned int start_irq_number;
@@ -82,6 +82,7 @@ int a_val = 0;
 int b_val = 0;
 int x_val = 0;
 int y_val = 0;
+
 struct spi_master *master;
 static struct spi_device *joystick_spi_dev;
 struct spi_board_info joystick_spi_dev_info = {
@@ -97,10 +98,13 @@ int right_key_val = 0;
 int down_key_val = 0;
 int up_key_val = 0;
 int i;
+static struct input_polled_dev *controller_joystick_dev;
 
-bool input_device_allocated = false;
-bool input_device_registered = false;
+bool buttons_device_allocated = false;
+bool buttons_device_registered = false;
 bool spi_device_registered = false;
+bool joystick_device_allocated = false;
+bool joystick_device_registered = false;
 
 bool left_shoulder_pin_requested = false;
 bool right_shoulder_pin_requested = false;
@@ -122,7 +126,6 @@ bool a_irq_set = false;
 bool b_irq_set = false;
 bool x_irq_set = false;
 bool y_irq_set = false;
-bool joystick_irq_set = false;
 
 static irqreturn_t left_shoulder_interrupt(int irq, void *dummy) {
     static unsigned long flags;
@@ -133,8 +136,8 @@ static irqreturn_t left_shoulder_interrupt(int irq, void *dummy) {
         } else {
             left_shoulder_val = 0;
         }
-        input_report_key(gpio_controller_dev, LEFT_SHOULDER_KEY, left_shoulder_val);
-        input_sync(gpio_controller_dev);
+        input_report_key(controller_buttons_dev, LEFT_SHOULDER_KEY, left_shoulder_val);
+        input_sync(controller_buttons_dev);
         old_left_shoulder_jiffie = jiffies;
     }
     local_irq_restore(flags);
@@ -150,8 +153,8 @@ static irqreturn_t right_shoulder_interrupt(int irq, void *dummy) {
         } else {
             right_shoulder_val = 0;
         }
-        input_report_key(gpio_controller_dev, RIGHT_SHOULDER_KEY, right_shoulder_val);
-        input_sync(gpio_controller_dev);
+        input_report_key(controller_buttons_dev, RIGHT_SHOULDER_KEY, right_shoulder_val);
+        input_sync(controller_buttons_dev);
         old_right_shoulder_jiffie = jiffies;
     }
     local_irq_restore(flags);
@@ -167,8 +170,8 @@ static irqreturn_t start_interrupt(int irq, void *dummy) {
         } else {
             start_val = 0;
         }
-        input_report_key(gpio_controller_dev, START_KEY, start_val);
-        input_sync(gpio_controller_dev);
+        input_report_key(controller_buttons_dev, START_KEY, start_val);
+        input_sync(controller_buttons_dev);
         old_start_jiffie = jiffies;
     }
     local_irq_restore(flags);
@@ -184,8 +187,8 @@ static irqreturn_t select_interrupt(int irq, void *dummy) {
         } else {
             select_val = 0;
         }
-        input_report_key(gpio_controller_dev, SELECT_KEY, select_val);
-        input_sync(gpio_controller_dev);
+        input_report_key(controller_buttons_dev, SELECT_KEY, select_val);
+        input_sync(controller_buttons_dev);
         old_select_jiffie = jiffies;
     }
     local_irq_restore(flags);
@@ -201,8 +204,8 @@ static irqreturn_t a_interrupt(int irq, void *dummy) {
         } else {
             a_val = 0;
         }
-        input_report_key(gpio_controller_dev, A_KEY, a_val);
-        input_sync(gpio_controller_dev);
+        input_report_key(controller_buttons_dev, A_KEY, a_val);
+        input_sync(controller_buttons_dev);
         old_a_jiffie = jiffies;
     }
     local_irq_restore(flags);
@@ -218,8 +221,8 @@ static irqreturn_t b_interrupt(int irq, void *dummy) {
         } else {
             b_val = 0;
         }
-        input_report_key(gpio_controller_dev, B_KEY, b_val);
-        input_sync(gpio_controller_dev);
+        input_report_key(controller_buttons_dev, B_KEY, b_val);
+        input_sync(controller_buttons_dev);
         old_b_jiffie = jiffies;
     }
     local_irq_restore(flags);
@@ -235,8 +238,8 @@ static irqreturn_t x_interrupt(int irq, void *dummy) {
         } else {
             x_val = 0;
         }
-        input_report_key(gpio_controller_dev, X_KEY, x_val);
-        input_sync(gpio_controller_dev);
+        input_report_key(controller_buttons_dev, X_KEY, x_val);
+        input_sync(controller_buttons_dev);
         old_x_jiffie = jiffies;
     }
     local_irq_restore(flags);
@@ -252,20 +255,17 @@ static irqreturn_t y_interrupt(int irq, void *dummy) {
         } else {
             y_val = 0;
         }
-        input_report_key(gpio_controller_dev, Y_KEY, y_val);
-        input_sync(gpio_controller_dev);
+        input_report_key(controller_buttons_dev, Y_KEY, y_val);
+        input_sync(controller_buttons_dev);
         old_y_jiffie = jiffies;
     }
     local_irq_restore(flags);
     return IRQ_HANDLED;
 }
 
-static irqreturn_t joystick_spi_interrupt(int irq, void *dummy) {
-    static unsigned long flags;
+static void joystick_spi_poll(struct input_polled_dev *dev) {
     unsigned char x1, x2, y1, y2;
-    local_irq_save(flags);
-
-    pr_info("joystick interrupt start\n");
+    pr_info("joystick poll start\n");
 
     gpio_set_value(JOYSTICK_CS_PIN, 0);
     // Start Sequence
@@ -372,21 +372,17 @@ static irqreturn_t joystick_spi_interrupt(int irq, void *dummy) {
         } else {
             up_key_val = 0;
         }
-        input_report_key(gpio_controller_dev, LEFT_KEY, left_key_val);
-        input_report_key(gpio_controller_dev, RIGHT_KEY, right_key_val);
-        input_report_key(gpio_controller_dev, DOWN_KEY, down_key_val);
-        input_report_key(gpio_controller_dev, UP_KEY, up_key_val);
-        input_sync(gpio_controller_dev);
+        input_report_key(controller_buttons_dev, LEFT_KEY, left_key_val);
+        input_report_key(controller_buttons_dev, RIGHT_KEY, right_key_val);
+        input_report_key(controller_buttons_dev, DOWN_KEY, down_key_val);
+        input_report_key(controller_buttons_dev, UP_KEY, up_key_val);
+        input_sync(controller_buttons_dev);
     }
 
-    pr_info("joystick interrupt end\n");
-
-    local_irq_restore(flags);
-    return IRQ_HANDLED;
+    pr_info("joystick poll end\n");
 }
 
 static void unallocate_all(void) {
-    if (joystick_irq_set) {free_irq(SPI_IRQ_NUM, NULL);}
     if (y_irq_set) {free_irq(y_irq_number, NULL);}
     if (x_irq_set) {free_irq(x_irq_number, NULL);}
     if (b_irq_set) {free_irq(b_irq_number, NULL);}
@@ -408,34 +404,43 @@ static void unallocate_all(void) {
     if (right_shoulder_pin_requested) {gpio_free(RIGHT_SHOULDER_PIN);}
     if (left_shoulder_pin_requested) {gpio_free(LEFT_SHOULDER_PIN);}
 
+    if (joystick_device_registered) {
+        input_unregister_polled_device(controller_joystick_dev);
+    } else if (joystick_device_allocated) {
+        input_free_polled_device(controller_joystick_dev);
+    }
     if (spi_device_registered) {spi_unregister_device(joystick_spi_dev);}
-    if (input_device_registered) {
-        input_unregister_device(gpio_controller_dev);
-    } else if (input_device_allocated) {
-        input_free_device(gpio_controller_dev);
+    if (buttons_device_registered) {
+        input_unregister_device(controller_buttons_dev);
+    } else if (buttons_device_allocated) {
+        input_free_device(controller_buttons_dev);
     }
 }
 
 static int __init gpio_controller_driver_init(void) {
-    gpio_controller_dev = input_allocate_device();
-    if (gpio_controller_dev) {
-        input_device_allocated = true;
+    controller_buttons_dev = input_allocate_device();
+    if (controller_buttons_dev) {
+        buttons_device_allocated = true;
 
-        gpio_controller_dev->name = "gpio_controller_device";
-        set_bit(EV_KEY, gpio_controller_dev->evbit);
-        set_bit(EV_REP, gpio_controller_dev->evbit);
-        set_bit(LEFT_SHOULDER_KEY, gpio_controller_dev->keybit);
-        set_bit(RIGHT_SHOULDER_KEY, gpio_controller_dev->keybit);
-        set_bit(START_KEY, gpio_controller_dev->keybit);
-        set_bit(SELECT_KEY, gpio_controller_dev->keybit);
-        set_bit(A_KEY, gpio_controller_dev->keybit);
-        set_bit(B_KEY, gpio_controller_dev->keybit);
-        set_bit(X_KEY, gpio_controller_dev->keybit);
-        set_bit(Y_KEY, gpio_controller_dev->keybit);
+        controller_buttons_dev->name = "controller_buttons_device";
+        set_bit(EV_KEY, controller_buttons_dev->evbit);
+        set_bit(EV_REP, controller_buttons_dev->evbit);
+        set_bit(LEFT_SHOULDER_KEY, controller_buttons_dev->keybit);
+        set_bit(RIGHT_SHOULDER_KEY, controller_buttons_dev->keybit);
+        set_bit(START_KEY, controller_buttons_dev->keybit);
+        set_bit(SELECT_KEY, controller_buttons_dev->keybit);
+        set_bit(A_KEY, controller_buttons_dev->keybit);
+        set_bit(B_KEY, controller_buttons_dev->keybit);
+        set_bit(X_KEY, controller_buttons_dev->keybit);
+        set_bit(Y_KEY, controller_buttons_dev->keybit);
+        set_bit(LEFT_KEY, controller_buttons_dev->keybit);
+        set_bit(RIGHT_KEY, controller_buttons_dev->keybit);
+        set_bit(DOWN_KEY, controller_buttons_dev->keybit);
+        set_bit(UP_KEY, controller_buttons_dev->keybit);
 
-        if (input_register_device(gpio_controller_dev) == 0) {
+        if (input_register_device(controller_buttons_dev) == 0) {
             char pin_code[8] = "GPIO_XX\0";
-            input_device_registered = true;
+            buttons_device_registered = true;
 
             if (gpio_is_valid(LEFT_SHOULDER_PIN) == false) {goto init_fail;}
             pin_code[5] = '0' + (LEFT_SHOULDER_PIN / 10);
@@ -444,7 +449,7 @@ static int __init gpio_controller_driver_init(void) {
             left_shoulder_pin_requested = true;
             gpio_direction_input(LEFT_SHOULDER_PIN);
             left_shoulder_irq_number = gpio_to_irq(LEFT_SHOULDER_PIN);
-            if (request_irq(left_shoulder_irq_number, left_shoulder_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {goto init_fail;}
+            if (request_irq(left_shoulder_irq_number, left_shoulder_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "controller_buttons_device", NULL) < 0) {goto init_fail;}
             left_shoulder_irq_set = true;
 
             if (gpio_is_valid(RIGHT_SHOULDER_PIN) == false) {goto init_fail;}
@@ -454,7 +459,7 @@ static int __init gpio_controller_driver_init(void) {
             right_shoulder_pin_requested = true;
             gpio_direction_input(RIGHT_SHOULDER_PIN);
             right_shoulder_irq_number = gpio_to_irq(RIGHT_SHOULDER_PIN);
-            if (request_irq(right_shoulder_irq_number, right_shoulder_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {goto init_fail;}
+            if (request_irq(right_shoulder_irq_number, right_shoulder_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "controller_buttons_device", NULL) < 0) {goto init_fail;}
             right_shoulder_irq_set = true;
 
             if (gpio_is_valid(START_PIN) == false) {goto init_fail;}
@@ -464,7 +469,7 @@ static int __init gpio_controller_driver_init(void) {
             start_pin_requested = true;
             gpio_direction_input(START_PIN);
             start_irq_number = gpio_to_irq(START_PIN);
-            if (request_irq(start_irq_number, start_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {goto init_fail;}
+            if (request_irq(start_irq_number, start_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "controller_buttons_device", NULL) < 0) {goto init_fail;}
             start_irq_set = true;
 
             if (gpio_is_valid(SELECT_PIN) == false) {goto init_fail;}
@@ -474,7 +479,7 @@ static int __init gpio_controller_driver_init(void) {
             select_pin_requested = true;
             gpio_direction_input(SELECT_PIN);
             select_irq_number = gpio_to_irq(SELECT_PIN);
-            if (request_irq(select_irq_number, select_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {goto init_fail;}
+            if (request_irq(select_irq_number, select_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "controller_buttons_device", NULL) < 0) {goto init_fail;}
             select_irq_set = true;
 
             if (gpio_is_valid(A_PIN) == false) {goto init_fail;}
@@ -484,7 +489,7 @@ static int __init gpio_controller_driver_init(void) {
             a_pin_requested = true;
             gpio_direction_input(A_PIN);
             a_irq_number = gpio_to_irq(A_PIN);
-            if (request_irq(a_irq_number, a_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {goto init_fail;}
+            if (request_irq(a_irq_number, a_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "controller_buttons_device", NULL) < 0) {goto init_fail;}
             a_irq_set = true;
 
             if (gpio_is_valid(B_PIN) == false) {goto init_fail;}
@@ -494,7 +499,7 @@ static int __init gpio_controller_driver_init(void) {
             b_pin_requested = true;
             gpio_direction_input(B_PIN);
             b_irq_number = gpio_to_irq(B_PIN);
-            if (request_irq(b_irq_number, b_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {goto init_fail;}
+            if (request_irq(b_irq_number, b_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "controller_buttons_device", NULL) < 0) {goto init_fail;}
             b_irq_set = true;
 
             if (gpio_is_valid(X_PIN) == false) {goto init_fail;}
@@ -504,7 +509,7 @@ static int __init gpio_controller_driver_init(void) {
             x_pin_requested = true;
             gpio_direction_input(X_PIN);
             x_irq_number = gpio_to_irq(X_PIN);
-            if (request_irq(x_irq_number, x_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {goto init_fail;}
+            if (request_irq(x_irq_number, x_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "controller_buttons_device", NULL) < 0) {goto init_fail;}
             x_irq_set = true;
 
             if (gpio_is_valid(Y_PIN) == false) {goto init_fail;}
@@ -514,7 +519,7 @@ static int __init gpio_controller_driver_init(void) {
             y_pin_requested = true;
             gpio_direction_input(Y_PIN);
             y_irq_number = gpio_to_irq(Y_PIN);
-            if (request_irq(y_irq_number, y_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_controller_device", NULL) < 0) {goto init_fail;}
+            if (request_irq(y_irq_number, y_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "controller_buttons_device", NULL) < 0) {goto init_fail;}
             y_irq_set = true;
 
             pr_info("starting joystick pin init\n");
@@ -555,15 +560,18 @@ static int __init gpio_controller_driver_init(void) {
             joystick_spi_dev->bits_per_word = 8;
             if (spi_setup(joystick_spi_dev)) {goto init_fail;}
 
-            pr_info("finished joystick device init\n");
+            pr_info("finished spi setup\n");
 
-            if (request_irq(SPI_IRQ_NUM, joystick_spi_interrupt, IRQF_SHARED, "gpio_controller_device", NULL) < 0) {
-                pr_info("couldn't get irq for joystick spi interrupt\n");
-                goto init_fail;
-            }
-            joystick_irq_set = true;
+            controller_joystick_dev = input_allocate_polled_device();
+            if (!controller_joystick_dev) {goto init_fail;}
+            joystick_device_allocated = true;
+            controller_joystick_dev->name = "controller_joystick_device";
+            controller_joystick_dev->poll = joystick_spi_poll;
+            controller_joystick_dev->input = controller_buttons_dev;
+            if (input_register_device(controller_buttons_dev) < 0) {goto init_fail;}
+            joystick_device_registered = true;
 
-            pr_info("finished joystick irq init\n");
+            pr_info("finished joystick input device init\n");
 
             return 0;
         }
