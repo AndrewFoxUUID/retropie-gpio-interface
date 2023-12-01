@@ -115,6 +115,7 @@ bool b_irq_set = false;
 bool x_irq_set = false;
 bool y_irq_set = false;
 
+/*
 static irqreturn_t left_shoulder_interrupt(int irq, void *dummy) {
     static unsigned long flags;
     local_irq_save(flags);
@@ -250,6 +251,7 @@ static irqreturn_t y_interrupt(int irq, void *dummy) {
     local_irq_restore(flags);
     return IRQ_HANDLED;
 }
+*/
 
 static void joystick_spi_poll(struct input_polled_dev *dev) {
     unsigned char x1, x2, y1, y2;
