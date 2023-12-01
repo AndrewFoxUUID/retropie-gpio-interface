@@ -7,6 +7,8 @@
 #include <linux/jiffies.h>
 #include <linux/spi/spi.h>
 #include <linux/delay.h>
+#include <bcm2835.h>
+#include "dev_info.h"
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Andrew Fox");
@@ -22,8 +24,7 @@ MODULE_VERSION("0.3");
 #define X_PIN               24
 #define Y_PIN               23
 #define JOYSTICK_CS_PIN     18
-#define JOYSTICK_DO_PIN     19
-#define JOYSTICK_DI_PIN     20
+#define JOYSTICK_DOI_PIN    20
 #define JOYSTICK_CLK_PIN    21
 #define SPI_BUS_NUM         1
 #define SPI_IRQ_NUM         84 // ???
@@ -112,8 +113,7 @@ bool x_pin_requested = false;
 bool y_pin_requested = false;
 bool joystick_cs_pin_requested = false;
 bool joystick_clk_pin_requested = false;
-bool joystick_do_pin_requested = false;
-bool joystick_di_pin_requested = false;
+bool joystick_doi_pin_requested = false;
 
 bool left_shoulder_irq_set = false;
 bool right_shoulder_irq_set = false;
@@ -268,85 +268,87 @@ static irqreturn_t joystick_spi_interrupt(int irq, void *dummy) {
 
     pr_info("joystick interrupt start\n");
 
-    gpio_set_value(JOYSTICK_CS_PIN, 1); // enable joystick spi device
-
+    gpio_set_value(JOYSTICK_CS_PIN, 0);
+    // Start Sequence
     gpio_set_value(JOYSTICK_CLK_PIN, 0);
-    gpio_set_value(JOYSTICK_DI_PIN, 1);
-    msleep(2);
+    gpio_direction_output(JOYSTICK_DOI_PIN, 1);
+    msleep(ADC0832DELAY);
     gpio_set_value(JOYSTICK_CLK_PIN, 1);
-    msleep(2);
-
+    msleep(ADC0832DELAY);
     gpio_set_value(JOYSTICK_CLK_PIN, 0);
-    gpio_set_value(JOYSTICK_DI_PIN, 1);
-    msleep(2);
+    gpio_set_value(JOYSTICK_DOI_PIN, ADC0832_MUX_DIFFERENTIAL);
+    msleep(ADC0832DELAY);
     gpio_set_value(JOYSTICK_CLK_PIN, 1);
-    msleep(2);
-
+    msleep(ADC0832DELAY);
+    // Send Sequence
     gpio_set_value(JOYSTICK_CLK_PIN, 0);
-    gpio_set_value(JOYSTICK_DI_PIN, 0); // x
-    msleep(2);
+    gpio_set_value(JOYSTICK_DOI_PIN, PS2JOYSTICK_X_AXIS);
+    msleep(ADC0832DELAY);
     gpio_set_value(JOYSTICK_CLK_PIN, 1);
-    gpio_set_value(JOYSTICK_DI_PIN, 1);
-    msleep(2);
-
+    gpio_set_value(JOYSTICK_DOI_PIN, 1);
+    msleep(ADC0832DELAY);
+    // Receive Sequence
     gpio_set_value(JOYSTICK_CLK_PIN, 0);
-    gpio_set_value(JOYSTICK_DI_PIN, 1);
-    msleep(2);
-
+    gpio_set_value(JOYSTICK_DOI_PIN, 1);
+    msleep(ADC0832DELAY);
+    gpio_direction_input(JOYSTICK_DOI_PIN);
     for (i = 0; i < 8; i++) {
         gpio_set_value(JOYSTICK_CLK_PIN, 1);
-        msleep(2);
+        msleep(ADC0832DELAY);
         gpio_set_value(JOYSTICK_CLK_PIN, 0);
-        msleep(2);
-        x1 = (x1 << 1) | gpio_get_value(JOYSTICK_DO_PIN);
+        msleep(ADC0832DELAY);
+        x1 = (x1 << 1) | gpio_get_value(JOYSTICK_DOI_PIN);
     }
     for (i = 0; i < 8; i++) {
-        x2 = x2 | (gpio_get_value(JOYSTICK_DO_PIN) << i);
+        x2 = x2 | (gpio_get_value(JOYSTICK_DOI_PIN) << i);
         gpio_set_value(JOYSTICK_CLK_PIN, 1);
-        msleep(2);
+        msleep(ADC0832DELAY);
         gpio_set_value(JOYSTICK_CLK_PIN, 0);
-        msleep(2);
+        msleep(ADC0832DELAY);
     }
-
+    // Reset Sequence
+    gpio_set_value(JOYSTICK_CS_PIN, 1);
+    msleep(ADC0832DELAY);
+    gpio_set_value(JOYSTICK_CS_PIN, 0);
+    // Start Sequence
     gpio_set_value(JOYSTICK_CLK_PIN, 0);
-    gpio_set_value(JOYSTICK_DI_PIN, 1);
-    msleep(2);
+    gpio_direction_output(JOYSTICK_DOI_PIN, 1);
+    msleep(ADC0832DELAY);
     gpio_set_value(JOYSTICK_CLK_PIN, 1);
-    msleep(2);
-
+    msleep(ADC0832DELAY);
     gpio_set_value(JOYSTICK_CLK_PIN, 0);
-    gpio_set_value(JOYSTICK_DI_PIN, 1);
-    msleep(2);
+    gpio_set_value(JOYSTICK_DOI_PIN, ADC0832_MUX_DIFFERENTIAL);
+    msleep(ADC0832DELAY);
     gpio_set_value(JOYSTICK_CLK_PIN, 1);
-    msleep(2);
-
+    msleep(ADC0832DELAY);
+    // Send Sequence
     gpio_set_value(JOYSTICK_CLK_PIN, 0);
-    gpio_set_value(JOYSTICK_DI_PIN, 1); // y
-    msleep(2);
+    gpio_set_value(JOYSTICK_DOI_PIN, PS2JOYSTICK_Y_AXIS);
+    msleep(ADC0832DELAY);
     gpio_set_value(JOYSTICK_CLK_PIN, 1);
-    gpio_set_value(JOYSTICK_DI_PIN, 1);
-    msleep(2);
-
+    gpio_set_value(JOYSTICK_DOI_PIN, 1);
+    msleep(ADC0832DELAY);
+    // Receive Sequence
     gpio_set_value(JOYSTICK_CLK_PIN, 0);
-    gpio_set_value(JOYSTICK_DI_PIN, 1);
-    msleep(2);
-
+    gpio_set_value(JOYSTICK_DOI_PIN, 1);
+    msleep(ADC0832DELAY);
+    gpio_direction_input(JOYSTICK_DOI_PIN);
     for (i = 0; i < 8; i++) {
         gpio_set_value(JOYSTICK_CLK_PIN, 1);
-        msleep(2);
+        msleep(ADC0832DELAY);
         gpio_set_value(JOYSTICK_CLK_PIN, 0);
-        msleep(2);
+        msleep(ADC0832DELAY);
         y1 = (y1 << 1) | gpio_get_value(JOYSTICK_DO_PIN);
     }
     for (i = 0; i < 8; i++) {
         y2 = y2 | (gpio_get_value(JOYSTICK_DO_PIN) << i);
         gpio_set_value(JOYSTICK_CLK_PIN, 1);
-        msleep(2);
+        msleep(ADC0832DELAY);
         gpio_set_value(JOYSTICK_CLK_PIN, 0);
-        msleep(2);
+        msleep(ADC0832DELAY);
     }
-
-    gpio_set_value(JOYSTICK_CS_PIN, 0); // disable joystick spi device
+    // End Sequence
+    gpio_set_value(JOYSTICK_CS_PIN, 1);
 
     pr_info("disabled joystick spi device again\n");
 
@@ -395,8 +397,7 @@ static void unallocate_all(void) {
     if (right_shoulder_irq_set) {free_irq(right_shoulder_irq_number, NULL);}
     if (left_shoulder_irq_set) {free_irq(left_shoulder_irq_number, NULL);}
 
-    if (joystick_di_pin_requested) {gpio_free(JOYSTICK_DI_PIN);}
-    if (joystick_do_pin_requested) {gpio_free(JOYSTICK_DO_PIN);}
+    if (joystick_doi_pin_requested) {gpio_free(JOYSTICK_DOI_PIN);}
     if (joystick_clk_pin_requested) {gpio_free(JOYSTICK_CLK_PIN);}
     if (joystick_cs_pin_requested) {gpio_free(JOYSTICK_CS_PIN);}
     if (y_pin_requested) {gpio_free(Y_PIN);}
@@ -533,19 +534,11 @@ static int __init gpio_controller_driver_init(void) {
             joystick_clk_pin_requested = true;
             gpio_direction_output(JOYSTICK_CLK_PIN, 0);
 
-            if (gpio_is_valid(JOYSTICK_DO_PIN) == false) {goto init_fail;}
-            pin_code[5] = '0' + (JOYSTICK_DO_PIN / 10);
-            pin_code[6] = '0' + (JOYSTICK_DO_PIN % 10);
-            if (gpio_request(JOYSTICK_DO_PIN, pin_code) < 0) {goto init_fail;}
-            joystick_do_pin_requested = true;
-            gpio_direction_input(JOYSTICK_DO_PIN);
-
-            if (gpio_is_valid(JOYSTICK_DI_PIN) == false) {goto init_fail;}
-            pin_code[5] = '0' + (JOYSTICK_DI_PIN / 10);
-            pin_code[6] = '0' + (JOYSTICK_DI_PIN % 10);
-            if (gpio_request(JOYSTICK_DI_PIN, pin_code) < 0) {goto init_fail;}
-            joystick_di_pin_requested = true;
-            gpio_direction_output(JOYSTICK_DI_PIN, 0);
+            if (gpio_is_valid(JOYSTICK_DOI_PIN) == false) {goto init_fail;}
+            pin_code[5] = '0' + (JOYSTICK_DOI_PIN / 10);
+            pin_code[6] = '0' + (JOYSTICK_DOI_PIN % 10);
+            if (gpio_request(JOYSTICK_DOI_PIN, pin_code) < 0) {goto init_fail;}
+            joystick_doi_pin_requested = true;
 
             pr_info("finished joystick pin init\n");
 
