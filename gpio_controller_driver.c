@@ -87,10 +87,10 @@ static struct spi_device *joystick_spi_dev;
 struct spi_board_info joystick_spi_dev_info = {
     .modalias = "joystick-spi-adc0832-driver",
     .irq = SPI_IRQ_NUM,
-    .max_speed_hz = 400000,
+    .max_speed_hz = 500000,//400000,
     .bus_num = SPI_BUS_NUM,
     .chip_select = 0,
-    .mode = SPI_MODE_3
+    .mode = SPI_MODE_0//3
 };
 int left_key_val = 0;
 int right_key_val = 0;
