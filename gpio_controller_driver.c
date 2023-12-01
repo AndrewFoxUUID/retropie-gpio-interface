@@ -337,10 +337,10 @@ static irqreturn_t joystick_spi_interrupt(int irq, void *dummy) {
         msleep(ADC0832DELAY);
         gpio_set_value(JOYSTICK_CLK_PIN, 0);
         msleep(ADC0832DELAY);
-        y1 = (y1 << 1) | gpio_get_value(JOYSTICK_DO_PIN);
+        y1 = (y1 << 1) | gpio_get_value(JOYSTICK_DOI_PIN);
     }
     for (i = 0; i < 8; i++) {
-        y2 = y2 | (gpio_get_value(JOYSTICK_DO_PIN) << i);
+        y2 = y2 | (gpio_get_value(JOYSTICK_DOI_PIN) << i);
         gpio_set_value(JOYSTICK_CLK_PIN, 1);
         msleep(ADC0832DELAY);
         gpio_set_value(JOYSTICK_CLK_PIN, 0);
