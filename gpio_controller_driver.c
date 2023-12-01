@@ -558,7 +558,7 @@ static int __init gpio_controller_driver_init(void) {
 
             controller_joystick_dev->poll = joystick_spi_poll;
             controller_joystick_dev->input = controller_buttons_dev;
-            if (input_register_device(controller_joystick_dev) < 0) {goto init_fail;}
+            if (input_register_polled_device(controller_joystick_dev) < 0) {goto init_fail;}
             joystick_device_registered = true;
 
             pr_info("finished joystick input device init\n");
