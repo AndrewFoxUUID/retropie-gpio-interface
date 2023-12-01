@@ -512,6 +512,8 @@ static int __init gpio_controller_driver_init(void) {
             if (request_irq(y_irq_number, y_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "controller_buttons_device", NULL) < 0) {goto init_fail;}
             y_irq_set = true;*/
 
+            char pin_code[8] = "GPIO_XX\0"; /*TEMP*/
+
             pr_info("starting joystick pin init\n");
 
             if (gpio_is_valid(JOYSTICK_CS_PIN) == false) {goto init_fail;}
