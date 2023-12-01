@@ -400,7 +400,7 @@ static void unallocate_all(void) {
 
 static int __init gpio_controller_driver_init(void) {
     gpio_polling_device = input_allocate_polled_device();
-    if (gpio_input_device) {
+    if (gpio_polling_device) {
         gpio_device_allocated = true;
         pr_info("allocated input poll device\n");
 
