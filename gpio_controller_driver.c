@@ -251,7 +251,6 @@ static irqreturn_t y_interrupt(int irq, void *dummy) {
 
 static void joystick_spi_poll(struct input_polled_dev *dev) {
     unsigned char x1, x2, y1, y2;
-    pr_info("joystick poll start\n");
 
     gpio_set_value(JOYSTICK_CS_PIN, 0);
     // Start Sequence
@@ -335,9 +334,9 @@ static void joystick_spi_poll(struct input_polled_dev *dev) {
     // End Sequence
     gpio_set_value(JOYSTICK_CS_PIN, 1);
 
-    pr_info("disabled joystick spi device again\n");
-
     if (x1 == x2 && y1 == y2) {
+        pr_info("(%d, %d)\n", y1, x1);
+
         if (x1 < 2) {
             down_key_val++;
         } else {
@@ -364,8 +363,6 @@ static void joystick_spi_poll(struct input_polled_dev *dev) {
         input_report_key(gpio_input_device, UP_KEY, up_key_val);
         input_sync(gpio_input_device);
     }
-
-    pr_info("joystick poll end\n");
 }
 
 static void unallocate_all(void) {
@@ -402,9 +399,9 @@ static int __init gpio_controller_driver_init(void) {
     gpio_polling_device = input_allocate_polled_device();
     if (gpio_polling_device) {
         gpio_device_allocated = true;
-        pr_info("allocated input poll device\n");
 
         gpio_polling_device->poll = joystick_spi_poll;
+        gpio_polling_device->poll_interval = 100;
         gpio_input_device = gpio_polling_device->input;
         gpio_input_device->name = "gpio_input_device";
         set_bit(EV_KEY, gpio_input_device->evbit);
@@ -506,8 +503,6 @@ static int __init gpio_controller_driver_init(void) {
             if (request_irq(y_irq_number, y_interrupt, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_input_device", NULL) < 0) {goto init_fail;}
             y_irq_set = true;
 
-            pr_info("starting joystick pin init\n");
-
             if (gpio_is_valid(JOYSTICK_CS_PIN) == false) {goto init_fail;}
             pin_code[5] = '0' + (JOYSTICK_CS_PIN / 10);
             pin_code[6] = '0' + (JOYSTICK_CS_PIN % 10);
@@ -528,23 +523,15 @@ static int __init gpio_controller_driver_init(void) {
             if (gpio_request(JOYSTICK_DOI_PIN, pin_code) < 0) {goto init_fail;}
             joystick_doi_pin_requested = true;
 
-            pr_info("finished joystick pin init\n");
-
             master = spi_busnum_to_master(SPI_BUS_NUM);
             if (master == NULL) {goto init_fail;}
-
-            pr_info("got master\n");
 
             joystick_spi_dev = spi_new_device(master, &joystick_spi_dev_info);
             if (joystick_spi_dev == NULL) {goto init_fail;}
             spi_device_registered = true;
 
-            pr_info("registered spi device\n");
-
             joystick_spi_dev->bits_per_word = 8;
             if (spi_setup(joystick_spi_dev)) {goto init_fail;}
-
-            pr_info("finished spi setup\n");
 
             return 0;
         }
