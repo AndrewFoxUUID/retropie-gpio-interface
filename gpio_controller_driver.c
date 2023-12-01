@@ -392,9 +392,9 @@ static void unallocate_all(void) {
 
     if (spi_device_registered) {spi_unregister_device(joystick_spi_dev);}
     if (gpio_device_registered) {
-        input_unregister_polling_device(gpio_polling_device);
+        input_unregister_polled_device(gpio_polling_device);
     } else if (gpio_device_allocated) {
-        input_free_polling_device(gpio_polling_device);
+        input_free_polled_device(gpio_polling_device);
     }
 }
 
