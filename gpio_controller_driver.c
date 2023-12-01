@@ -7,7 +7,6 @@
 #include <linux/jiffies.h>
 #include <linux/spi/spi.h>
 #include <linux/delay.h>
-#include <bcm2835.h>
 #include "dev_info.h"
 
 MODULE_LICENSE("GPL");
