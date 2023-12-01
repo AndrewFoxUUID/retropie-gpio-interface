@@ -401,7 +401,7 @@ static int __init gpio_controller_driver_init(void) {
         gpio_device_allocated = true;
 
         gpio_polling_device->poll = joystick_spi_poll;
-        gpio_polling_device->poll_interval = 100;
+        gpio_polling_device->poll_interval = 10;
         gpio_input_device = gpio_polling_device->input;
         gpio_input_device->name = "gpio_input_device";
         set_bit(EV_KEY, gpio_input_device->evbit);
