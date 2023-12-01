@@ -77,10 +77,10 @@ static struct spi_device *joystick_spi_dev;
 struct spi_board_info joystick_spi_dev_info = {
     .modalias = "joystick-spi-adc0832-driver",
     .irq = SPI_IRQ_NUM,
-    .max_speed_hz = 500000,//400000,
+    .max_speed_hz = 400000,
     .bus_num = SPI_BUS_NUM,
     .chip_select = 0,
-    .mode = SPI_MODE_0//3
+    .mode = SPI_MODE_0
 };
 int left_key_val = 0;
 int right_key_val = 0;
@@ -256,80 +256,80 @@ static void joystick_spi_poll(struct input_polled_dev *dev) {
     // Start Sequence
     gpio_set_value(JOYSTICK_CLK_PIN, 0);
     gpio_direction_output(JOYSTICK_DOI_PIN, 1);
-    msleep(ADC0832DELAY);
+    udelay(ADC0832DELAY);
     gpio_set_value(JOYSTICK_CLK_PIN, 1);
-    msleep(ADC0832DELAY);
+    udelay(ADC0832DELAY);
     gpio_set_value(JOYSTICK_CLK_PIN, 0);
     gpio_set_value(JOYSTICK_DOI_PIN, ADC0832_MUX_DIFFERENTIAL);
-    msleep(ADC0832DELAY);
+    udelay(ADC0832DELAY);
     gpio_set_value(JOYSTICK_CLK_PIN, 1);
-    msleep(ADC0832DELAY);
+    udelay(ADC0832DELAY);
     // Send Sequence
     gpio_set_value(JOYSTICK_CLK_PIN, 0);
     gpio_set_value(JOYSTICK_DOI_PIN, PS2JOYSTICK_X_AXIS);
-    msleep(ADC0832DELAY);
+    udelay(ADC0832DELAY);
     gpio_set_value(JOYSTICK_CLK_PIN, 1);
     gpio_set_value(JOYSTICK_DOI_PIN, 1);
-    msleep(ADC0832DELAY);
+    udelay(ADC0832DELAY);
     // Receive Sequence
     gpio_set_value(JOYSTICK_CLK_PIN, 0);
     gpio_set_value(JOYSTICK_DOI_PIN, 1);
-    msleep(ADC0832DELAY);
+    udelay(ADC0832DELAY);
     gpio_direction_input(JOYSTICK_DOI_PIN);
     for (i = 0; i < 8; i++) {
         gpio_set_value(JOYSTICK_CLK_PIN, 1);
-        msleep(ADC0832DELAY);
+        udelay(ADC0832DELAY);
         gpio_set_value(JOYSTICK_CLK_PIN, 0);
-        msleep(ADC0832DELAY);
+        udelay(ADC0832DELAY);
         x1 = (x1 << 1) | gpio_get_value(JOYSTICK_DOI_PIN);
     }
     for (i = 0; i < 8; i++) {
         x2 = x2 | (gpio_get_value(JOYSTICK_DOI_PIN) << i);
         gpio_set_value(JOYSTICK_CLK_PIN, 1);
-        msleep(ADC0832DELAY);
+        udelay(ADC0832DELAY);
         gpio_set_value(JOYSTICK_CLK_PIN, 0);
-        msleep(ADC0832DELAY);
+        udelay(ADC0832DELAY);
     }
     // Reset Sequence
     gpio_set_value(JOYSTICK_CS_PIN, 1);
-    msleep(ADC0832DELAY);
+    udelay(ADC0832DELAY);
     gpio_set_value(JOYSTICK_CS_PIN, 0);
     // Start Sequence
     gpio_set_value(JOYSTICK_CLK_PIN, 0);
     gpio_direction_output(JOYSTICK_DOI_PIN, 1);
-    msleep(ADC0832DELAY);
+    udelay(ADC0832DELAY);
     gpio_set_value(JOYSTICK_CLK_PIN, 1);
-    msleep(ADC0832DELAY);
+    udelay(ADC0832DELAY);
     gpio_set_value(JOYSTICK_CLK_PIN, 0);
     gpio_set_value(JOYSTICK_DOI_PIN, ADC0832_MUX_DIFFERENTIAL);
-    msleep(ADC0832DELAY);
+    udelay(ADC0832DELAY);
     gpio_set_value(JOYSTICK_CLK_PIN, 1);
-    msleep(ADC0832DELAY);
+    udelay(ADC0832DELAY);
     // Send Sequence
     gpio_set_value(JOYSTICK_CLK_PIN, 0);
     gpio_set_value(JOYSTICK_DOI_PIN, PS2JOYSTICK_Y_AXIS);
-    msleep(ADC0832DELAY);
+    udelay(ADC0832DELAY);
     gpio_set_value(JOYSTICK_CLK_PIN, 1);
     gpio_set_value(JOYSTICK_DOI_PIN, 1);
-    msleep(ADC0832DELAY);
+    udelay(ADC0832DELAY);
     // Receive Sequence
     gpio_set_value(JOYSTICK_CLK_PIN, 0);
     gpio_set_value(JOYSTICK_DOI_PIN, 1);
-    msleep(ADC0832DELAY);
+    udelay(ADC0832DELAY);
     gpio_direction_input(JOYSTICK_DOI_PIN);
     for (i = 0; i < 8; i++) {
         gpio_set_value(JOYSTICK_CLK_PIN, 1);
-        msleep(ADC0832DELAY);
+        udelay(ADC0832DELAY);
         gpio_set_value(JOYSTICK_CLK_PIN, 0);
-        msleep(ADC0832DELAY);
+        udelay(ADC0832DELAY);
         y1 = (y1 << 1) | gpio_get_value(JOYSTICK_DOI_PIN);
     }
     for (i = 0; i < 8; i++) {
         y2 = y2 | (gpio_get_value(JOYSTICK_DOI_PIN) << i);
         gpio_set_value(JOYSTICK_CLK_PIN, 1);
-        msleep(ADC0832DELAY);
+        udelay(ADC0832DELAY);
         gpio_set_value(JOYSTICK_CLK_PIN, 0);
-        msleep(ADC0832DELAY);
+        udelay(ADC0832DELAY);
     }
     // End Sequence
     gpio_set_value(JOYSTICK_CS_PIN, 1);
@@ -358,8 +358,11 @@ static void joystick_spi_poll(struct input_polled_dev *dev) {
             left_key_val = 0;
         }
         input_report_key(gpio_input_device, LEFT_KEY, left_key_val);
+        input_sync(gpio_input_device);
         input_report_key(gpio_input_device, RIGHT_KEY, right_key_val);
+        input_sync(gpio_input_device);
         input_report_key(gpio_input_device, DOWN_KEY, down_key_val);
+        input_sync(gpio_input_device);
         input_report_key(gpio_input_device, UP_KEY, up_key_val);
         input_sync(gpio_input_device);
     }
