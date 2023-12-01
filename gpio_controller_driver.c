@@ -90,7 +90,7 @@ struct spi_board_info joystick_spi_dev_info = {
     .max_speed_hz = 400000,
     .bus_num = SPI_BUS_NUM,
     .chip_select = 0,
-    .mode = SPI_MODE_1
+    .mode = SPI_MODE_3
 };
 int left_key_val = 0;
 int right_key_val = 0;
