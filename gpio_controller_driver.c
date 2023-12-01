@@ -338,25 +338,25 @@ static void joystick_spi_poll(struct input_polled_dev *dev) {
     pr_info("disabled joystick spi device again\n");
 
     if (x1 == x2 && y1 == y2) {
-        if (x1 < 1) {
-            left_key_val++;
-        } else {
-            left_key_val = 0;
-        }
-        if (x1 > 254) {
-            right_key_val++;
-        } else {
-            right_key_val = 0;
-        }
-        if (y1 < 1) {
+        if (x1 < 2) {
             down_key_val++;
         } else {
             down_key_val = 0;
         }
-        if (y1 > 254) {
+        if (x1 > 254) {
             up_key_val++;
         } else {
             up_key_val = 0;
+        }
+        if (y1 < 2) {
+            right_key_val++;
+        } else {
+            right_key_val = 0;
+        }
+        if (y1 > 254) {
+            left_key_val++;
+        } else {
+            left_key_val = 0;
         }
         input_report_key(gpio_input_device, LEFT_KEY, left_key_val);
         input_report_key(gpio_input_device, RIGHT_KEY, right_key_val);
