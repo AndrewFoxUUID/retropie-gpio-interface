@@ -14,7 +14,7 @@ MODULE_AUTHOR("Andrew Fox");
 MODULE_DESCRIPTION("A driver for a GPIO based custom RetroPie controller");
 MODULE_VERSION("0.4");
 
-#define LEFT_SHOULDER_PIN   4
+#define LEFT_SHOULDER_PIN   26
 #define RIGHT_SHOULDER_PIN  17
 #define START_PIN           22
 #define SELECT_PIN          27
