@@ -1,4 +1,3 @@
-#include <linux/kernel.h>
 #include <linux/input-polldev.h>
 #include <linux/module.h>
 #include <linux/init.h>
@@ -335,8 +334,6 @@ static void joystick_spi_poll(struct input_polled_dev *dev) {
     gpio_set_value(JOYSTICK_CS_PIN, 1);
 
     if (x1 == x2 && y1 == y2) {
-        pr_info("(%d, %d)\n", y1, x1);
-
         if (x1 < 2) {
             down_key_val++;
         } else {
